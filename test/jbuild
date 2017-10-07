@@ -2,4 +2,5 @@
 
 (executable
  ((name driver)
-  (libraries (ssh_agent cstruct angstrom-unix nocrypto))))
+  (preprocess (pps (lwt.ppx)))
+  (libraries (ssh_agent cstruct angstrom-lwt-unix nocrypto lwt.ppx cstruct-lwt))))

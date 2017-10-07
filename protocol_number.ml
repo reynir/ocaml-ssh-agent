@@ -28,9 +28,14 @@ type ssh_agent =
   | SSH_AGENT_EXTENSION_FAILURE [@id 28]
 [@@uint8_t][@@sexp]]
 
+let cstruct_of_ssh_agent ssh_agent =
+  ssh_agent_to_int ssh_agent |> Wire.cstruct_of_byte
+
 [%%cenum
 type sign_flag =
   | SSH_AGENT_RSA_SHA2_256 [@id 2]
   | SSH_AGENT_RSA_SHA2_512 [@id 4]
 [@@uint8_t][@@sexp]]
 
+let cstruct_of_sign_flag sign_flag =
+  sign_flag_to_int sign_flag |> Int32.of_int |> Wire.cstruct_of_uint32

@@ -80,6 +80,7 @@ end
 type ssh_agent_request =
   | Ssh_agentc_request_identities
   | Ssh_agentc_sign_request of Pubkey.t * string * Protocol_number.sign_flag list
+  | Ssh_agentc_add_identity of { key_type : string; key_contents : string; key_comment : string }
 
 type ssh_agent_response =
   | Ssh_agent_failure
@@ -127,3 +128,6 @@ let ssh_agent_message =
 let write_ssh_agent fd n =
   let n = Protocol_number.ssh_agent_to_int n in
   Unix.write fd (String.make 1 (char_of_int n)) 0 1
+
+module Wire = Wire
+module Protocol_number = Protocol_number
