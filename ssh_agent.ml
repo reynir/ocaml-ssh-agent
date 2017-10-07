@@ -129,5 +129,18 @@ let write_ssh_agent fd n =
   let n = Protocol_number.ssh_agent_to_int n in
   Unix.write fd (String.make 1 (char_of_int n)) 0 1
 
+let cstruct_of_ssh_agent_request req =
+  let message =
+    match req with
+    | Ssh_agentc_request_identities ->
+      Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_REQUEST_IDENTITIES)
+    | _ ->
+      failwith "Not implemented"
+  in
+  let r = Cstruct.create (4 + Cstruct.len message) in
+  Cstruct.BE.set_uint32 r 0 (Int32.of_int (Cstruct.len message));
+  Cstruct.blit message 0 r 4 (Cstruct.len message);
+  r
+
 module Wire = Wire
 module Protocol_number = Protocol_number

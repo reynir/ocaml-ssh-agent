@@ -9,11 +9,8 @@ let main () =
   let () = Printf.printf "Connecting to %s...\n" sock_path in
   let%lwt () = Lwt_unix.connect fd Unix.(ADDR_UNIX sock_path) in
   let () = Printf.printf "Connected!\n" in
-  let buf = Cstruct.create 4 in
-  let () = Cstruct.BE.set_uint32 buf 0 1l in
-  let _ = Lwt_unix.write fd (Cstruct.to_string buf) 0 4 in
   let%lwt () = Lwt_cstruct.complete (Lwt_cstruct.write fd) @@
-    Protocol_number.cstruct_of_ssh_agent Protocol_number.SSH_AGENTC_REQUEST_IDENTITIES in
+    cstruct_of_ssh_agent_request Ssh_agentc_request_identities in
   let inc = Lwt_io.of_fd Lwt_io.input fd in
   match%lwt Angstrom_lwt_unix.parse
           Ssh_agent.ssh_agent_message
