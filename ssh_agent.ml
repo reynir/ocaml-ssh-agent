@@ -75,12 +75,42 @@ module Pubkey = struct
     comment : string;
   }
 
+  let to_cstruct pubkey =
+    let ( <+> ) = Cstruct.append
+    and to_cstruct = Nocrypto.Numeric.Z.to_cstruct_be in
+    match pubkey with
+    | Ssh_dss { p; q; g; y } ->
+      Wire.cstruct_of_string "ssh-dss" <+>
+      to_cstruct p <+>
+      to_cstruct q <+>
+      to_cstruct g <+>
+      to_cstruct y
+    | Ssh_rsa { e; n } ->
+      Wire.cstruct_of_string "ssh-rsa" <+>
+      to_cstruct e <+>
+      to_cstruct n
+    | Blob { key_type; key_blob } ->
+      Cstruct.of_string key_type <+>
+      Cstruct.of_string key_blob
+
 end
+
+(** XXX: Empty type - only as a placeholder *)
+type void = { elim_empty : 'a. 'a }
 
 type ssh_agent_request =
   | Ssh_agentc_request_identities
   | Ssh_agentc_sign_request of Pubkey.t * string * Protocol_number.sign_flag list
   | Ssh_agentc_add_identity of { key_type : string; key_contents : string; key_comment : string }
+  | Ssh_agentc_remove_identity of Pubkey.t
+  | Ssh_agentc_remove_all_identities
+  | Ssh_agentc_add_smartcard_key of void
+  | Ssh_agentc_remove_smartcard_key of void
+  | Ssh_agentc_lock of string
+  | Ssh_agentc_unlock of string
+  | Ssh_agentc_add_id_constrained of void
+  | Ssh_agentc_add_smartcard_key_constrained of void
+  | Ssh_agentc_extension of string * string (** extension type * extension contents *)
 
 type ssh_agent_response =
   | Ssh_agent_failure
@@ -134,6 +164,22 @@ let cstruct_of_ssh_agent_request req =
     match req with
     | Ssh_agentc_request_identities ->
       Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_REQUEST_IDENTITIES)
+    | Ssh_agentc_remove_all_identities ->
+      Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_REMOVE_ALL_IDENTITIES)
+    | Ssh_agentc_remove_identity pubkey ->
+      Cstruct.append
+        Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_REMOVE_IDENTITY)
+        (Pubkey.to_cstruct pubkey)
+    | Ssh_agentc_lock passphrase ->
+      let r = Cstruct.create (1 + String.length passphrase) in
+      Cstruct.set_uint8 r 0 Protocol_number.(ssh_agent_to_int SSH_AGENTC_LOCK);
+      Cstruct.blit_from_string passphrase 0 r 1 (String.length passphrase);
+      r
+    | Ssh_agentc_unlock passphrase ->
+      let r = Cstruct.create (1 + String.length passphrase) in
+      Cstruct.set_uint8 r 0 Protocol_number.(ssh_agent_to_int SSH_AGENTC_UNLOCK);
+      Cstruct.blit_from_string passphrase 0 r 1 (String.length passphrase);
+      r
     | _ ->
       failwith "Not implemented"
   in
