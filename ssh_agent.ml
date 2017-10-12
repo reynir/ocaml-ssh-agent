@@ -76,21 +76,20 @@ module Pubkey = struct
   }
 
   let to_cstruct pubkey =
-    let ( <+> ) = Cstruct.append
-    and to_cstruct = Nocrypto.Numeric.Z.to_cstruct_be in
+    let ( <+> ) = Cstruct.append in
     match pubkey with
     | Ssh_dss { p; q; g; y } ->
       Wire.cstruct_of_string "ssh-dss" <+>
-      to_cstruct p <+>
-      to_cstruct q <+>
-      to_cstruct g <+>
-      to_cstruct y
+      Wire.cstruct_of_mpint p <+>
+      Wire.cstruct_of_mpint q <+>
+      Wire.cstruct_of_mpint g <+>
+      Wire.cstruct_of_mpint y
     | Ssh_rsa { e; n } ->
       Wire.cstruct_of_string "ssh-rsa" <+>
-      to_cstruct e <+>
-      to_cstruct n
+      Wire.cstruct_of_mpint e <+>
+      Wire.cstruct_of_mpint n
     | Blob { key_type; key_blob } ->
-      Cstruct.of_string key_type <+>
+      Wire.cstruct_of_string key_type <+>
       Cstruct.of_string key_blob
 
 end
