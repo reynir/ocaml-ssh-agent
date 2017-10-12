@@ -15,17 +15,9 @@ let parse_lift s p =
   | Error e -> Angstrom.fail e
 
 module Pubkey = struct
-  type ssh_dss = {
-    p : Z.t;
-    q : Z.t;
-    g : Z.t;
-    y : Z.t;
-  }
+  type ssh_dss = Nocrypto.Dsa.pub
 
-  type ssh_rsa = {
-    e : Z.t;
-    n : Z.t;
-  }
+  type ssh_rsa = Nocrypto.Rsa.pub
 
   type t =
     | Ssh_dss of ssh_dss
@@ -44,9 +36,9 @@ module Pubkey = struct
     let open Angstrom in
     Wire.mpint >>= fun p ->
     Wire.mpint >>= fun q ->
-    Wire.mpint >>= fun g ->
+    Wire.mpint >>= fun gg ->
     Wire.mpint >>= fun y ->
-    return (Ssh_dss { p; q; g; y })
+    return (Ssh_dss { p; q; gg; y })
 
   let ssh_rsa =
     let open Angstrom in
@@ -78,11 +70,11 @@ module Pubkey = struct
   let to_cstruct pubkey =
     let ( <+> ) = Cstruct.append in
     match pubkey with
-    | Ssh_dss { p; q; g; y } ->
+    | Ssh_dss { p; q; gg; y } ->
       Wire.cstruct_of_string "ssh-dss" <+>
       Wire.cstruct_of_mpint p <+>
       Wire.cstruct_of_mpint q <+>
-      Wire.cstruct_of_mpint g <+>
+      Wire.cstruct_of_mpint gg <+>
       Wire.cstruct_of_mpint y
     | Ssh_rsa { e; n } ->
       Wire.cstruct_of_string "ssh-rsa" <+>
