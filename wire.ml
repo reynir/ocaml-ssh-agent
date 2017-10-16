@@ -54,7 +54,7 @@ let cstruct_of_uint64 uint64 =
 let cstruct_of_string s =
   let r = Cstruct.create (4 + String.length s) in
   let () = Cstruct.BE.set_uint32 r 0 (String.length s |> Int32.of_int) in
-  let () = Cstruct.blit_from_string s 0 r 0 (String.length s) in
+  let () = Cstruct.blit_from_string s 0 r 4 (String.length s) in
   r
 
 let cstruct_of_mpint mpint =
@@ -65,7 +65,7 @@ let cstruct_of_mpint mpint =
     let mpint_len = Cstruct.len mpint in
     let r = Cstruct.create (4 + Cstruct.len mpint) in
     let () = Cstruct.BE.set_uint32 r 0 (Int32.of_int mpint_len) in
-    let () = Cstruct.blit mpint 0 r 0 (Cstruct.len mpint) in
+    let () = Cstruct.blit mpint 0 r 4 (Cstruct.len mpint) in
     r
 
 let cstruct_of_name_list name_list =

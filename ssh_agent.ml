@@ -160,7 +160,9 @@ let cstruct_of_ssh_agent_request req =
     | Ssh_agentc_remove_identity pubkey ->
       Cstruct.append
         Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_REMOVE_IDENTITY)
-        (Pubkey.to_cstruct pubkey)
+        (let keyblob = Pubkey.to_cstruct pubkey in
+         (* Keyblob is sent as a wire string *)
+         Wire.cstruct_of_string (Cstruct.to_string keyblob))
     | Ssh_agentc_lock passphrase ->
       let r = Cstruct.create (1 + String.length passphrase) in
       Cstruct.set_uint8 r 0 Protocol_number.(ssh_agent_to_int SSH_AGENTC_LOCK);
