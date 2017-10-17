@@ -18,6 +18,7 @@ let string =
   take (Int32.to_int string_len)
 
 (* XXX: int32 -> int coercion *)
+(* FIXME: negative numbers *)
 let mpint =
   BE.uint32
   >>= fun mpint_len ->
@@ -25,7 +26,7 @@ let mpint =
   then return Z.zero
   else take (Int32.to_int mpint_len)
     >>= fun mpint ->
-    return (Z.of_bits mpint)
+    return (Nocrypto.Numeric.Z.of_cstruct_be (Cstruct.of_string mpint))
 
 let name_list =
   string >>|
@@ -57,16 +58,19 @@ let cstruct_of_string s =
   let () = Cstruct.blit_from_string s 0 r 4 (String.length s) in
   r
 
+(* FIXME: Negative numbers *)
 let cstruct_of_mpint mpint =
   if mpint = Z.zero
-  then Cstruct.create 4 (* Cstruct.create initializes with zeroes *)
+  then cstruct_of_uint32 Int32.zero
   else
     let mpint = Nocrypto.Numeric.Z.to_cstruct_be mpint in
-    let mpint_len = Cstruct.len mpint in
-    let r = Cstruct.create (4 + Cstruct.len mpint) in
-    let () = Cstruct.BE.set_uint32 r 0 (Int32.of_int mpint_len) in
-    let () = Cstruct.blit mpint 0 r 4 (Cstruct.len mpint) in
-    r
+    let mpint_padded =
+      if Cstruct.get_uint8 mpint 0 land 0x80 <> 0
+      then Cstruct.append (Cstruct.of_string "\000") mpint
+      else mpint in
+    Cstruct.append
+      (cstruct_of_uint32 (Int32.of_int (Cstruct.len mpint_padded)))
+      mpint_padded
 
 let cstruct_of_name_list name_list =
   cstruct_of_string @@ String.concat "," name_list
