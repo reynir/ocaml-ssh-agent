@@ -1,5 +1,3 @@
-module Z = Nocrypto.Numeric.Z
-
 (* Angstrom helpers *)
 let take32 n =
   Angstrom.take (Int32.to_int n)
