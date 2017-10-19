@@ -107,6 +107,7 @@ type ssh_agent_response =
   (* ... *)
   | Ssh_agent_identities_answer of Pubkey.identity list
   | Ssh_agent_not_implemented of Protocol_number.ssh_agent
+  | Ssh_agent_sign_response of string
 
 let id_entry =
   let open Angstrom in
@@ -118,6 +119,11 @@ let ssh_agent_identities_answer =
   let open Angstrom in
   BE.int32 >>= fun nkeys ->
   count32 nkeys id_entry
+
+let ssh_agent_sign_response =
+  let open Angstrom in
+  Wire.string >>= fun signature ->
+  return (Ssh_agent_sign_response signature)
 
 let ssh_agent_message_type =
   let open Angstrom in
@@ -131,6 +137,8 @@ let ssh_agent_message_type =
   | Some SSH_AGENT_IDENTITIES_ANSWER ->
     ssh_agent_identities_answer >>| fun identities ->
     Ssh_agent_identities_answer identities
+  | Some SSH_AGENT_SIGN_RESPONSE ->
+    ssh_agent_sign_response
   | Some protocol_number ->
     fail ("Unimplemeted protocol number: " ^
           ssh_agent_to_string protocol_number)
@@ -153,6 +161,13 @@ let cstruct_of_ssh_agent_request req =
     match req with
     | Ssh_agentc_request_identities ->
       Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_REQUEST_IDENTITIES)
+    | Ssh_agentc_sign_request (pubkey, data, flags) ->
+      Cstruct.concat [
+        Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_SIGN_REQUEST);
+        Pubkey.to_cstruct pubkey |> Cstruct.to_string |> Wire.cstruct_of_string;
+        Wire.cstruct_of_string data;
+        Protocol_number.cstruct_of_sign_flags flags;
+      ]
     | Ssh_agentc_remove_all_identities ->
       Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_REMOVE_ALL_IDENTITIES)
     | Ssh_agentc_remove_identity pubkey ->

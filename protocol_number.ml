@@ -37,5 +37,15 @@ type sign_flag =
   | SSH_AGENT_RSA_SHA2_512 [@id 4]
 [@@uint8_t][@@sexp]]
 
-let cstruct_of_sign_flag sign_flag =
-  sign_flag_to_int sign_flag |> Int32.of_int |> Wire.cstruct_of_uint32
+let mask_to_sign_flags mask =
+  let mask_test mask flag =
+    if sign_flag_to_int flag land mask <> 0
+    then [flag]
+    else [] in
+  List.concat (List.map (mask_test mask) [SSH_AGENT_RSA_SHA2_256; SSH_AGENT_RSA_SHA2_512])
+
+let cstruct_of_sign_flags sign_flags =
+  let flags = List.fold_left (fun acc sign_flag ->
+      sign_flag_to_int sign_flag lor acc)
+      0 sign_flags in
+  flags |> Int32.of_int |> Wire.cstruct_of_uint32
