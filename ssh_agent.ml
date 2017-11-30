@@ -20,7 +20,7 @@ module Pubkey = struct
   type t =
     | Ssh_dss of ssh_dss
     | Ssh_rsa of ssh_rsa
-    | Blob of { 
+    | Blob of {
         key_type : string;
         key_blob : string;
       }
