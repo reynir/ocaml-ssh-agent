@@ -12,6 +12,11 @@ let parse_lift s p =
   | Ok a -> Angstrom.return a
   | Error e -> Angstrom.fail e
 
+let with_faraday (f : Faraday.t -> unit) : string =
+  let buf = Faraday.create 1024 in
+  f buf;
+  Faraday.serialize_to_string buf
+
 module Pubkey = struct
   type ssh_dss = Nocrypto.Dsa.pub
 
@@ -64,6 +69,22 @@ module Pubkey = struct
     pubkey : t;
     comment : string;
   }
+
+  let write_pubkey t pubkey =
+    match pubkey with
+    | Ssh_dss { p; q; gg; y } ->
+      Wire.write_string t "ssh-dss";
+      Wire.write_mpint t p;
+      Wire.write_mpint t q;
+      Wire.write_mpint t gg;
+      Wire.write_mpint t y
+    | Ssh_rsa { e; n } ->
+      Wire.write_string t "ssh-rsa";
+      Wire.write_mpint t e;
+      Wire.write_mpint t n
+    | Blob { key_type; key_blob } ->
+      Wire.write_string t key_type;
+      Faraday.write_string t key_blob
 
   let to_cstruct pubkey =
     let ( <+> ) = Cstruct.append in
@@ -152,47 +173,36 @@ let ssh_agent_message =
   parse_lift (take32 msg_len)
     ssh_agent_message_type
 
-let write_ssh_agent fd n =
+let write_ssh_agent t n =
   let n = Protocol_number.ssh_agent_to_int n in
-  Unix.write fd (String.make 1 (char_of_int n)) 0 1
+  Faraday.write_uint8 t n
 
-let cstruct_of_ssh_agent_request req =
-  let message =
-    match req with
-    | Ssh_agentc_request_identities ->
-      Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_REQUEST_IDENTITIES)
-    | Ssh_agentc_sign_request (pubkey, data, flags) ->
-      Cstruct.concat [
-        Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_SIGN_REQUEST);
-        Pubkey.to_cstruct pubkey |> Cstruct.to_string |> Wire.cstruct_of_string;
-        Wire.cstruct_of_string data;
-        Protocol_number.cstruct_of_sign_flags flags;
-      ]
-    | Ssh_agentc_remove_all_identities ->
-      Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_REMOVE_ALL_IDENTITIES)
-    | Ssh_agentc_remove_identity pubkey ->
-      Cstruct.append
-        Protocol_number.(cstruct_of_ssh_agent SSH_AGENTC_REMOVE_IDENTITY)
-        (let keyblob = Pubkey.to_cstruct pubkey in
-         (* Keyblob is sent as a wire string *)
-         Wire.cstruct_of_string (Cstruct.to_string keyblob))
-    | Ssh_agentc_lock passphrase ->
-      let r = Cstruct.create (1 + String.length passphrase) in
-      Cstruct.set_uint8 r 0 Protocol_number.(ssh_agent_to_int SSH_AGENTC_LOCK);
-      Cstruct.blit_from_string passphrase 0 r 1 (String.length passphrase);
-      r
-    | Ssh_agentc_unlock passphrase ->
-      let r = Cstruct.create (1 + String.length passphrase) in
-      Cstruct.set_uint8 r 0 Protocol_number.(ssh_agent_to_int SSH_AGENTC_UNLOCK);
-      Cstruct.blit_from_string passphrase 0 r 1 (String.length passphrase);
-      r
-    | _ ->
-      failwith "Not implemented"
-  in
-  let r = Cstruct.create (4 + Cstruct.len message) in
-  Cstruct.BE.set_uint32 r 0 (Int32.of_int (Cstruct.len message));
-  Cstruct.blit message 0 r 4 (Cstruct.len message);
-  r
+let write_ssh_agent_request t req =
+  let message = with_faraday (fun t ->
+      match req with
+      | Ssh_agentc_request_identities ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_REQUEST_IDENTITIES)
+      | Ssh_agentc_sign_request (pubkey, data, flags) ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_SIGN_REQUEST);
+        Wire.write_string t (with_faraday (fun t -> Pubkey.write_pubkey t pubkey));
+        Wire.write_string t data;
+        Protocol_number.write_sign_flags t flags
+      | Ssh_agentc_remove_all_identities ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_REMOVE_ALL_IDENTITIES)
+      | Ssh_agentc_remove_identity pubkey ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_REMOVE_IDENTITY);
+        Wire.write_string t (with_faraday (fun t -> Pubkey.write_pubkey t pubkey))
+      | Ssh_agentc_lock passphrase ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_LOCK);
+        Faraday.write_string t passphrase
+      | Ssh_agentc_unlock passphrase ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_UNLOCK);
+        Faraday.write_string t passphrase
+      | _ ->
+        failwith "Not implemented"
+    ) in
+  Wire.write_uint32 t (Int32.of_int (String.length message));
+  Faraday.write_string t message
 
 module Wire = Wire
 module Protocol_number = Protocol_number

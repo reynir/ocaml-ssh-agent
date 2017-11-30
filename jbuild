@@ -3,4 +3,4 @@
 (library
  ((name ssh_agent)
   (preprocess (pps (ppx_cstruct)))
-  (libraries (cstruct angstrom nocrypto))))
+  (libraries (cstruct angstrom nocrypto faraday))))
