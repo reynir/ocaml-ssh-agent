@@ -8,7 +8,7 @@ let count32 n =
 let parse_lift s p =
   let open Angstrom in
   s >>= fun s ->
-  match parse_only p (`String s) with
+  match parse_string p s with
   | Ok a -> Angstrom.return a
   | Error e -> Angstrom.fail e
 
@@ -148,7 +148,7 @@ let ssh_agent_message_type =
 
 let ssh_agent_message =
   let open Angstrom in
-  BE.uint32 >>= fun msg_len ->
+  BE.int32 >>= fun msg_len ->
   parse_lift (take32 msg_len)
     ssh_agent_message_type
 
