@@ -108,27 +108,70 @@ end
 (** XXX: Empty type - only as a placeholder *)
 type void = { elim_empty : 'a. 'a }
 
-type ssh_agent_request =
-  | Ssh_agentc_request_identities
-  | Ssh_agentc_sign_request of Pubkey.t * string * Protocol_number.sign_flag list
-  | Ssh_agentc_add_identity of { key_type : string; key_contents : string; key_comment : string }
-  | Ssh_agentc_remove_identity of Pubkey.t
-  | Ssh_agentc_remove_all_identities
-  | Ssh_agentc_add_smartcard_key of void
-  | Ssh_agentc_remove_smartcard_key of void
-  | Ssh_agentc_lock of string
-  | Ssh_agentc_unlock of string
-  | Ssh_agentc_add_id_constrained of void
-  | Ssh_agentc_add_smartcard_key_constrained of void
-  | Ssh_agentc_extension of string * string (** extension type * extension contents *)
+type ssh_agent_request_type = [
+  | `Ssh_agentc_request_identities
+  | `Ssh_agentc_sign_request
+  | `Ssh_agentc_add_identity
+  | `Ssh_agentc_remove_identity
+  | `Ssh_agentc_remove_all_identities
+  | `Ssh_agentc_add_smartcard_key
+  | `Ssh_agentc_remove_smartcard_key
+  | `Ssh_agentc_lock
+  | `Ssh_agentc_unlock
+  | `Ssh_agentc_add_id_constrained
+  | `Ssh_agentc_add_smartcard_key_constrained
+  | `Ssh_agentc_extension
+]
 
-type ssh_agent_response =
-  | Ssh_agent_failure
-  | Ssh_agent_success
-  (* ... *)
-  | Ssh_agent_identities_answer of Pubkey.identity list
-  | Ssh_agent_not_implemented of Protocol_number.ssh_agent
-  | Ssh_agent_sign_response of string
+type _ ssh_agent_request =
+  | Ssh_agentc_request_identities :
+      [`Ssh_agentc_request_identities] ssh_agent_request
+  | Ssh_agentc_sign_request :
+      Pubkey.t * string * Protocol_number.sign_flag list
+    -> [`Ssh_agentc_sign_request] ssh_agent_request
+  | Ssh_agentc_add_identity :
+      { key_type : string; key_contents : string; key_comment : string }
+    -> [`Ssh_agentc_add_identity] ssh_agent_request
+  | Ssh_agentc_remove_identity :
+      Pubkey.t
+    -> [`Ssh_agentc_remove_identity] ssh_agent_request
+  | Ssh_agentc_remove_all_identities :
+      [`Ssh_agentc_remove_all_identities] ssh_agent_request
+  | Ssh_agentc_add_smartcard_key :
+      void
+    -> [`Ssh_agentc_add_smartcard_key] ssh_agent_request
+  | Ssh_agentc_remove_smartcard_key :
+      void
+    -> [`Ssh_agentc_remove_smartcard_key] ssh_agent_request
+  | Ssh_agentc_lock :
+      string
+    -> [`Ssh_agentc_lock] ssh_agent_request
+  | Ssh_agentc_unlock :
+      string
+    -> [`Ssh_agentc_unlock] ssh_agent_request
+  | Ssh_agentc_add_id_constrained :
+      void
+    -> [`Ssh_agentc_add_id_constrained] ssh_agent_request
+  | Ssh_agentc_add_smartcard_key_constrained :
+      void
+    -> [`Ssh_agentc_add_smartcard_key_constrained] ssh_agent_request
+  | Ssh_agentc_extension :
+      string * string
+    -> [`Ssh_agentc_extension] ssh_agent_request
+  (** extension type * extension contents *)
+
+type _ ssh_agent_response =
+  | Ssh_agent_failure : 'a ssh_agent_response
+  | Ssh_agent_success : 'a ssh_agent_response
+        (* TODO: refine when success can happen *)
+  | Ssh_agent_extension_failure : [`Ssh_agentc_extension] ssh_agent_response
+  | Ssh_agent_identities_answer : Pubkey.identity list
+    -> [`Ssh_agentc_request_identities] ssh_agent_response
+  | Ssh_agent_sign_response : string
+    -> [`Ssh_agentc_sign_request] ssh_agent_response
+
+type any_ssh_agent_response =
+  Any : 'a ssh_agent_response -> any_ssh_agent_response
 
 let id_entry =
   let open Angstrom in
@@ -152,14 +195,15 @@ let ssh_agent_message_type =
   Protocol_number.int_to_ssh_agent >>=
   let open Protocol_number in function
   | Some SSH_AGENT_FAILURE ->
-    return Ssh_agent_failure
+    return (Any Ssh_agent_failure)
   | Some SSH_AGENT_SUCCES ->
-    return Ssh_agent_success
+    return (Any Ssh_agent_success)
   | Some SSH_AGENT_IDENTITIES_ANSWER ->
     ssh_agent_identities_answer >>| fun identities ->
-    Ssh_agent_identities_answer identities
+    Any (Ssh_agent_identities_answer identities)
   | Some SSH_AGENT_SIGN_RESPONSE ->
-    ssh_agent_sign_response
+    ssh_agent_sign_response >>| fun r ->
+    Any r
   | Some protocol_number ->
     fail ("Unimplemeted protocol number: " ^
           ssh_agent_to_string protocol_number)
@@ -177,7 +221,7 @@ let write_ssh_agent t n =
   let n = Protocol_number.ssh_agent_to_int n in
   Faraday.write_uint8 t n
 
-let write_ssh_agent_request t req =
+let write_ssh_agent_request t (type a) (req : a ssh_agent_request) =
   let message = with_faraday (fun t ->
       match req with
       | Ssh_agentc_request_identities ->
