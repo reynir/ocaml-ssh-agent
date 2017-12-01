@@ -5,10 +5,10 @@ let take32 n =
 let count32 n =
   Angstrom.count (Int32.to_int n)
 
-let parse_lift s p =
+let parse_lift p1 p2 =
   let open Angstrom in
-  s >>= fun s ->
-  match parse_string p s with
+  p1 >>= fun s ->
+  match parse_string p2 s with
   | Ok a -> Angstrom.return a
   | Error e -> Angstrom.fail e
 
