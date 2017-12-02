@@ -21,7 +21,7 @@ let main () =
     match%lwt Angstrom_lwt_unix.parse
                 Ssh_agent.ssh_agent_message
                 inc with
-    | unconsumed, Ok (Any (Ssh_agent_identities_answer pubkeys)) ->
+    | unconsumed, Ok (Any_response (Ssh_agent_identities_answer pubkeys)) ->
       let%lwt () = Lwt_io.printf "%d keys\n" (List.length pubkeys) in
       let%lwt () = Lwt_list.iter_s (fun Ssh_agent.Pubkey.{ comment; pubkey } ->
           Lwt_io.printf "Key type %s with comment %s\n"
@@ -39,9 +39,9 @@ let main () =
     match%lwt Angstrom_lwt_unix.parse
                 Ssh_agent.ssh_agent_message
                 inc with
-    | unconsumed, Ok (Any Ssh_agent_success) ->
+    | unconsumed, Ok (Any_response Ssh_agent_success) ->
       Lwt_io.printl "Success!"
-    | unconsumed, Ok (Any Ssh_agent_failure) ->
+    | unconsumed, Ok (Any_response Ssh_agent_failure) ->
       Lwt_io.printl "Failure!"
     | unconsumed, Ok _ ->
       Lwt_io.eprintf "Error: Unexpected ssh-agent response\n"
@@ -56,7 +56,7 @@ let main () =
     match%lwt Angstrom_lwt_unix.parse
                 Ssh_agent.ssh_agent_message
                 inc with
-    | unconsumed, Ok (Any (Ssh_agent_identities_answer pubkeys)) ->
+    | unconsumed, Ok (Any_response (Ssh_agent_identities_answer pubkeys)) ->
       let%lwt () = Lwt_io.printf "%d keys\n" (List.length pubkeys) in
       Lwt_list.iter_s (fun Ssh_agent.Pubkey.{ comment; pubkey } ->
           Lwt_io.printf "Key type %s with comment %s\n"

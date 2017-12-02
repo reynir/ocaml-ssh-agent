@@ -160,6 +160,9 @@ type _ ssh_agent_request =
     -> [`Ssh_agentc_extension] ssh_agent_request
   (** extension type * extension contents *)
 
+type any_ssh_agent_request =
+  Any_request : 'a ssh_agent_request -> any_ssh_agent_request
+
 type _ ssh_agent_response =
   | Ssh_agent_failure : ssh_agent_request_type ssh_agent_response
   | Ssh_agent_success : ssh_agent_request_type ssh_agent_response
@@ -171,7 +174,7 @@ type _ ssh_agent_response =
     -> [`Ssh_agentc_sign_request] ssh_agent_response
 
 type any_ssh_agent_response =
-  Any : 'a ssh_agent_response -> any_ssh_agent_response
+  Any_response : 'a ssh_agent_response -> any_ssh_agent_response
 
 let id_entry =
   let open Angstrom in
@@ -195,15 +198,15 @@ let ssh_agent_message_type =
   Protocol_number.int_to_ssh_agent >>=
   let open Protocol_number in function
   | Some SSH_AGENT_FAILURE ->
-    return (Any Ssh_agent_failure)
+    return (Any_response Ssh_agent_failure)
   | Some SSH_AGENT_SUCCES ->
-    return (Any Ssh_agent_success)
+    return (Any_response Ssh_agent_success)
   | Some SSH_AGENT_IDENTITIES_ANSWER ->
     ssh_agent_identities_answer >>| fun identities ->
-    Any (Ssh_agent_identities_answer identities)
+    Any_response (Ssh_agent_identities_answer identities)
   | Some SSH_AGENT_SIGN_RESPONSE ->
     ssh_agent_sign_response >>| fun r ->
-    Any r
+    Any_response r
   | Some protocol_number ->
     fail ("Unimplemeted protocol number: " ^
           ssh_agent_to_string protocol_number)
