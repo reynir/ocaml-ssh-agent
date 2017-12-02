@@ -31,9 +31,6 @@ type ssh_agent =
 let write_ssh_agent t ssh_agent =
   Wire.write_byte t (ssh_agent_to_int ssh_agent)
 
-let cstruct_of_ssh_agent ssh_agent =
-  ssh_agent_to_int ssh_agent |> Wire.cstruct_of_byte
-
 [%%cenum
 type sign_flag =
   | SSH_AGENT_RSA_SHA2_256 [@id 2]
@@ -52,12 +49,6 @@ let write_sign_flags t sign_flags =
       sign_flag_to_int sign_flag lor acc)
       0 sign_flags in
   flags |> Int32.of_int |> Wire.write_uint32 t
-
-let cstruct_of_sign_flags sign_flags =
-  let flags = List.fold_left (fun acc sign_flag ->
-      sign_flag_to_int sign_flag lor acc)
-      0 sign_flags in
-  flags |> Int32.of_int |> Wire.cstruct_of_uint32
 
 (* TODO: constraint types *)
 type key_constraint = {

@@ -86,23 +86,6 @@ module Pubkey = struct
       Wire.write_string t key_type;
       Faraday.write_string t key_blob
 
-  let to_cstruct pubkey =
-    let ( <+> ) = Cstruct.append in
-    match pubkey with
-    | Ssh_dss { p; q; gg; y } ->
-      Wire.cstruct_of_string "ssh-dss" <+>
-      Wire.cstruct_of_mpint p <+>
-      Wire.cstruct_of_mpint q <+>
-      Wire.cstruct_of_mpint gg <+>
-      Wire.cstruct_of_mpint y
-    | Ssh_rsa { e; n } ->
-      Wire.cstruct_of_string "ssh-rsa" <+>
-      Wire.cstruct_of_mpint e <+>
-      Wire.cstruct_of_mpint n
-    | Blob { key_type; key_blob } ->
-      Wire.cstruct_of_string key_type <+>
-      Cstruct.of_string key_blob
-
 end
 
 (** XXX: Empty type - only as a placeholder *)
