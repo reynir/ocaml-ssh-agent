@@ -138,10 +138,10 @@ type _ ssh_agent_request =
   | Ssh_agentc_remove_all_identities :
       [`Ssh_agentc_remove_all_identities] ssh_agent_request
   | Ssh_agentc_add_smartcard_key :
-      void
+      { smartcard_id : string; smartcard_pin : string }
     -> [`Ssh_agentc_add_smartcard_key] ssh_agent_request
   | Ssh_agentc_remove_smartcard_key :
-      void
+      { smartcard_reader_id : string; smartcard_reader_pin : string }
     -> [`Ssh_agentc_remove_smartcard_key] ssh_agent_request
   | Ssh_agentc_lock :
       string
@@ -150,13 +150,15 @@ type _ ssh_agent_request =
       string
     -> [`Ssh_agentc_unlock] ssh_agent_request
   | Ssh_agentc_add_id_constrained :
-      void
+      { key_type : string; key_contents : string;
+        key_comment : string; key_constraints : Protocol_number.key_constraint list }
     -> [`Ssh_agentc_add_id_constrained] ssh_agent_request
   | Ssh_agentc_add_smartcard_key_constrained :
-      void
+      { smartcard_id : string; smartcard_pin : string;
+        smartcard_constraints : Protocol_number.key_constraint list }
     -> [`Ssh_agentc_add_smartcard_key_constrained] ssh_agent_request
   | Ssh_agentc_extension :
-      string * string
+      { extension_type : string; extension_contents : string }
     -> [`Ssh_agentc_extension] ssh_agent_request
   (** extension type * extension contents *)
 
@@ -234,18 +236,44 @@ let write_ssh_agent_request t (type a) (req : a ssh_agent_request) =
         Wire.write_string t (with_faraday (fun t -> Pubkey.write_pubkey t pubkey));
         Wire.write_string t data;
         Protocol_number.write_sign_flags t flags
-      | Ssh_agentc_remove_all_identities ->
-        Protocol_number.(write_ssh_agent t SSH_AGENTC_REMOVE_ALL_IDENTITIES)
+      | Ssh_agentc_add_identity { key_type; key_contents; key_comment } ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_ADD_IDENTITY);
+        Wire.write_string t key_type;
+        Faraday.write_string t key_contents;
+        Wire.write_string t key_comment
       | Ssh_agentc_remove_identity pubkey ->
         Protocol_number.(write_ssh_agent t SSH_AGENTC_REMOVE_IDENTITY);
         Wire.write_string t (with_faraday (fun t -> Pubkey.write_pubkey t pubkey))
+      | Ssh_agentc_remove_all_identities ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_REMOVE_ALL_IDENTITIES)
+      | Ssh_agentc_add_smartcard_key { smartcard_id; smartcard_pin } ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_ADD_SMARTCARD_KEY);
+        Wire.write_string t smartcard_id;
+        Wire.write_string t smartcard_pin
+      | Ssh_agentc_remove_smartcard_key { smartcard_reader_id; smartcard_reader_pin } ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_REMOVE_SMARTCARD_KEY);
+        Wire.write_string t smartcard_reader_id;
+        Wire.write_string t smartcard_reader_pin
       | Ssh_agentc_lock passphrase ->
         Protocol_number.(write_ssh_agent t SSH_AGENTC_LOCK);
         Faraday.write_string t passphrase
       | Ssh_agentc_unlock passphrase ->
         Protocol_number.(write_ssh_agent t SSH_AGENTC_UNLOCK);
         Faraday.write_string t passphrase
-      | _ ->
+      | Ssh_agentc_add_id_constrained { key_type; key_contents;
+                                        key_comment; key_constraints } ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_ADD_ID_CONSTRAINED);
+        Wire.write_string t key_type;
+        Faraday.write_string t key_contents;
+        Wire.write_string t key_comment;
+        Protocol_number.write_key_constraints t key_constraints
+      | Ssh_agentc_add_smartcard_key_constrained { smartcard_id; smartcard_pin;
+                                                   smartcard_constraints } ->
+        Protocol_number.(write_ssh_agent t SSH_AGENTC_ADD_SMARTCARD_KEY_CONSTRAINED);
+        Wire.write_string t smartcard_id;
+        Wire.write_string t smartcard_pin;
+        Protocol_number.write_key_constraints t smartcard_constraints
+      | Ssh_agentc_extension _ ->
         failwith "Not implemented"
     ) in
   Wire.write_uint32 t (Int32.of_int (String.length message));

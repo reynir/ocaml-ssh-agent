@@ -58,3 +58,15 @@ let cstruct_of_sign_flags sign_flags =
       sign_flag_to_int sign_flag lor acc)
       0 sign_flags in
   flags |> Int32.of_int |> Wire.cstruct_of_uint32
+
+(* TODO: constraint types *)
+type key_constraint = {
+  constraint_type : int;
+  constraint_data : string;
+}
+
+let write_key_constraints t constraints =
+  List.iter (fun { constraint_type; constraint_data } ->
+      Faraday.write_uint8 t constraint_type;
+      Faraday.write_string t constraint_data)
+    constraints
