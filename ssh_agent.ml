@@ -88,9 +88,6 @@ module Pubkey = struct
 
 end
 
-(** XXX: Empty type - only as a placeholder *)
-type void = { elim_empty : 'a. 'a }
-
 type ssh_agent_request_type = [
   | `Ssh_agentc_request_identities
   | `Ssh_agentc_sign_request
