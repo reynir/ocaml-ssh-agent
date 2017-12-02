@@ -161,8 +161,8 @@ type _ ssh_agent_request =
   (** extension type * extension contents *)
 
 type _ ssh_agent_response =
-  | Ssh_agent_failure : 'a ssh_agent_response
-  | Ssh_agent_success : 'a ssh_agent_response
+  | Ssh_agent_failure : ssh_agent_request_type ssh_agent_response
+  | Ssh_agent_success : ssh_agent_request_type ssh_agent_response
         (* TODO: refine when success can happen *)
   | Ssh_agent_extension_failure : [`Ssh_agentc_extension] ssh_agent_response
   | Ssh_agent_identities_answer : Pubkey.identity list
