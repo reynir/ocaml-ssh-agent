@@ -1,3 +1,36 @@
+module Privkey = struct
+  type ssh_dss = Nocrypto.Dsa.priv
+
+  type ssh_rsa = Nocrypto.Rsa.priv
+
+  type t =
+    | Ssh_dss of ssh_dss
+    | Ssh_rsa of ssh_rsa
+    | Blob of {
+        key_type : string;
+        key_blob : string;
+      }
+end
+
+module Pubkey = struct
+  type ssh_dss = Nocrypto.Dsa.pub
+
+  type ssh_rsa = Nocrypto.Rsa.pub
+
+  type t =
+    | Ssh_dss of ssh_dss
+    | Ssh_rsa of ssh_rsa
+    | Blob of {
+        key_type : string;
+        key_blob : string;
+      }
+end
+
+type identity = {
+  pubkey : Pubkey.t;
+  comment : string;
+}
+
 type ssh_agent_request_type = [
   | `Ssh_agentc_request_identities
   | `Ssh_agentc_sign_request
@@ -60,7 +93,7 @@ type _ ssh_agent_response =
   | Ssh_agent_success : ssh_agent_request_type ssh_agent_response
         (* TODO: refine when success can happen *)
   | Ssh_agent_extension_failure : [`Ssh_agentc_extension] ssh_agent_response
-  | Ssh_agent_identities_answer : Pubkey.identity list
+  | Ssh_agent_identities_answer : identity list
     -> [`Ssh_agentc_request_identities] ssh_agent_response
   | Ssh_agent_sign_response : string
     -> [`Ssh_agentc_sign_request] ssh_agent_response

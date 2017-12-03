@@ -1,6 +1,13 @@
 open Ssh_agent
 open Lwt.Infix
 
+let pubkey_type_name pubkey =
+  let open Ssh_agent.Pubkey in
+  match pubkey with
+  | Ssh_rsa _ -> "ssh-rsa"
+  | Ssh_dss _ -> "ssh-dss"
+  | Blob { key_type; _ } -> key_type
+
 let with_faraday (f : Faraday.t -> unit) : string =
   let buf = Faraday.create 1024 in
   f buf;
@@ -30,7 +37,7 @@ let main () =
       let%lwt () = Lwt_io.printf "%d keys\n" (List.length pubkeys) in
       let%lwt () = Lwt_list.iter_s (fun Ssh_agent.Pubkey.{ comment; pubkey } ->
           Lwt_io.printf "Key type %s with comment %s\n"
-            (Ssh_agent.Pubkey.type_name pubkey) comment)
+            (pubkey_type_name pubkey) comment)
           pubkeys in
       Lwt.return pubkeys
     | unconsumed, Ok _ ->
@@ -65,7 +72,7 @@ let main () =
       let%lwt () = Lwt_io.printf "%d keys\n" (List.length pubkeys) in
       Lwt_list.iter_s (fun Ssh_agent.Pubkey.{ comment; pubkey } ->
           Lwt_io.printf "Key type %s with comment %s\n"
-            (Ssh_agent.Pubkey.type_name pubkey) comment)
+            (pubkey_type_name pubkey) comment)
         pubkeys
     | unconsumed, Ok _ ->
       Lwt_io.eprintf "Error: Unexpected ssh-agent response\n"

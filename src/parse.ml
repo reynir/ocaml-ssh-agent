@@ -13,11 +13,77 @@ let parse_lift p1 p2 =
   | Ok a -> Angstrom.return a
   | Error e -> Angstrom.fail e
 
+let ssh_dss =
+  let open Angstrom in
+  Wire.mpint >>= fun p ->
+  Wire.mpint >>= fun q ->
+  Wire.mpint >>= fun gg ->
+  Wire.mpint >>= fun y ->
+  Wire.mpint >>= fun x ->
+  return (Privkey.Ssh_dss { p; q; gg; y; x })
+
+let ssh_rsa =
+  let open Angstrom in
+  Wire.mpint >>= fun n ->
+  Wire.mpint >>= fun e ->
+  Wire.mpint >>= fun d ->
+  Wire.mpint >>= fun iqmp ->
+  Wire.mpint >>= fun p ->
+  Wire.mpint >>= fun q ->
+  (* FIXME: How do the parameters correspond to Nocrypto.Rsa.priv ? *)
+  return (Privkey.Ssh_rsa (Nocrypto.Rsa.priv_of_primes ~e ~p ~q))
+
+let blob key_type =
+  let open Angstrom in
+  take_while (fun _ -> true) >>= fun key_blob ->
+  return (Privkey.Blob { key_type; key_blob })
+
+let privkey =
+  let open Angstrom in
+  Wire.string >>= function
+  | "ssh-dss" ->
+    ssh_dss
+  | "ssh-rsa" ->
+    ssh_rsa
+  | key_type ->
+    blob key_type
+
+let pub_ssh_dss =
+  let open Angstrom in
+  Wire.mpint >>= fun p ->
+  Wire.mpint >>= fun q ->
+  Wire.mpint >>= fun gg ->
+  Wire.mpint >>= fun y ->
+  return (Pubkey.Ssh_dss { p; q; gg; y })
+
+let pub_ssh_rsa =
+  let open Angstrom in
+  Wire.mpint >>= fun e ->
+  Wire.mpint >>= fun n ->
+  return (Pubkey.Ssh_rsa { e; n })
+
+let pub_blob key_type =
+  Angstrom.(take_while (fun _ -> true) >>= fun key_blob ->
+            return @@ Pubkey.Blob { key_type; key_blob; })
+
+let pubkey =
+  let open Angstrom in
+  Wire.string >>= function
+  | "ssh-dss" ->
+    pub_ssh_dss
+  | "ssh-rsa" ->
+    pub_ssh_rsa
+  | key_type ->
+    pub_blob key_type
+
+
+let comment = Wire.string
+
 let id_entry =
   let open Angstrom in
-  parse_lift Wire.string Pubkey.pubkey >>= fun pubkey ->
+  parse_lift Wire.string pubkey >>= fun pubkey ->
   Wire.string >>= fun comment ->
-  return { Pubkey.pubkey; comment }
+  return { pubkey; comment }
 
 let ssh_agent_identities_answer =
   let open Angstrom in
@@ -59,7 +125,7 @@ let ssh_agent_message =
 
 let ssh_agentc_sign_request =
   let open Angstrom in
-  parse_lift Wire.string Pubkey.pubkey >>= fun pubkey ->
+  parse_lift Wire.string pubkey >>= fun pubkey ->
   Wire.string >>= fun data ->
   Wire.uint32 >>= fun mask ->
   let flags = Protocol_number.mask_to_sign_flags (Int32.to_int mask) in
@@ -67,13 +133,13 @@ let ssh_agentc_sign_request =
 
 let ssh_agentc_add_identity =
   let open Angstrom in
-  Privkey.privkey >>= fun privkey ->
+  privkey >>= fun privkey ->
   Wire.string >>= fun key_comment ->
   return (Ssh_agentc_add_identity { privkey; key_comment })
 
 let ssh_agentc_remove_identity =
   let open Angstrom in
-  Pubkey.pubkey >>= fun pubkey ->
+  pubkey >>= fun pubkey ->
   return (Ssh_agentc_remove_identity pubkey)
 
 let ssh_agentc_add_smartcard_key =
