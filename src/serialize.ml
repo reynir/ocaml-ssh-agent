@@ -5,10 +5,6 @@ let with_faraday (f : Faraday.t -> unit) : string =
   f buf;
   Faraday.serialize_to_string buf
 
-let write_ssh_agent t n =
-  let n = Protocol_number.ssh_agent_to_int n in
-  Faraday.write_uint8 t n
-
 let write_ssh_agent_request t (type a) (req : a ssh_agent_request) =
   let message = with_faraday (fun t ->
       match req with
