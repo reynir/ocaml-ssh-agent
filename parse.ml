@@ -135,6 +135,8 @@ let ssh_agentc_message_type =
       fail "Not implemented"
     | Some SSH_AGENTC_EXTENSION ->
       req ssh_agentc_extension
+    | None | Some _ ->
+      fail "Not an ssh-agent request"
 
 let ssh_agentc_message =
   let open Angstrom in
