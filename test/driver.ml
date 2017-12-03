@@ -1,6 +1,11 @@
 open Ssh_agent
 open Lwt.Infix
 
+let with_faraday (f : Faraday.t -> unit) : string =
+  let buf = Faraday.create 1024 in
+  f buf;
+  Faraday.serialize_to_string buf
+
 let main () =
   let sock_path =
     match Sys.getenv_opt "SSH_AUTH_SOCK" with
@@ -15,7 +20,7 @@ let main () =
   (*let%lwt () = Lwt_cstruct.complete (Lwt_cstruct.write fd) @@
     cstruct_of_ssh_agent_request Ssh_agentc_request_identities in *)
   let%lwt () = Lwt_io.write outc
-      (Serialize.with_faraday (fun buf ->
+      (with_faraday (fun buf ->
            Serialize.write_ssh_agent_request buf Ssh_agentc_request_identities)) in
   let%lwt pubkeys =
     match%lwt Angstrom_lwt_unix.parse
@@ -33,7 +38,7 @@ let main () =
     | unconsumed, Error e ->
       Lwt.fail_with (Printf.sprintf "Error: %s\n" e) in
   let%lwt () = Lwt_io.write outc
-      (Serialize.with_faraday (fun buf ->
+      (with_faraday (fun buf ->
            Serialize.write_ssh_agent_request buf Ssh_agentc_remove_all_identities)) in
   let%lwt () =
     match%lwt Angstrom_lwt_unix.parse
@@ -50,7 +55,7 @@ let main () =
   (*let%lwt () = Lwt_cstruct.complete (Lwt_cstruct.write fd) @@
     cstruct_of_ssh_agent_request Ssh_agentc_request_identities in*)
   let%lwt () = Lwt_io.write outc
-      (Serialize.with_faraday (fun buf ->
+      (with_faraday (fun buf ->
            Serialize.write_ssh_agent_request buf Ssh_agentc_request_identities)) in
   let%lwt () =
     match%lwt Angstrom_lwt_unix.parse
