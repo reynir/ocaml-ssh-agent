@@ -60,3 +60,26 @@ let write_ssh_agent_request t (type a) (req : a ssh_agent_request) =
     ) in
   Wire.write_uint32 t (Int32.of_int (String.length message));
   Faraday.write_string t message
+
+let write_ssh_agent_response t (type a) (resp : a ssh_agent_response) =
+  let message = with_faraday (fun t ->
+      match resp with
+      | Ssh_agent_failure ->
+        Protocol_number.(write_ssh_agent t SSH_AGENT_FAILURE)
+      | Ssh_agent_success ->
+        Protocol_number.(write_ssh_agent t SSH_AGENT_SUCCES)
+      | Ssh_agent_extension_failure ->
+        Protocol_number.(write_ssh_agent t SSH_AGENT_EXTENSION_FAILURE)
+      | Ssh_agent_identities_answer ids ->
+        Protocol_number.(write_ssh_agent t SSH_AGENT_IDENTITIES_ANSWER);
+        Wire.write_uint32 t (Int32.of_int (List.length ids));
+        List.iter (fun Pubkey.{ pubkey; comment } ->
+            Wire.write_string t (with_faraday (fun t -> Pubkey.write_pubkey t pubkey));
+            Wire.write_string t comment)
+          ids
+      | Ssh_agent_sign_response signature ->
+        Protocol_number.(write_ssh_agent t SSH_AGENT_SIGN_RESPONSE);
+        Wire.write_string t signature)
+  in
+  Wire.write_uint32 t (Int32.of_int (String.length message));
+  Faraday.write_string t message
