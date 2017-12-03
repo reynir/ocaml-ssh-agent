@@ -15,11 +15,11 @@ let main () =
   (*let%lwt () = Lwt_cstruct.complete (Lwt_cstruct.write fd) @@
     cstruct_of_ssh_agent_request Ssh_agentc_request_identities in *)
   let%lwt () = Lwt_io.write outc
-      (with_faraday (fun buf ->
-           Ssh_agent.write_ssh_agent_request buf Ssh_agentc_request_identities)) in
+      (Serialize.with_faraday (fun buf ->
+           Serialize.write_ssh_agent_request buf Ssh_agentc_request_identities)) in
   let%lwt pubkeys =
     match%lwt Angstrom_lwt_unix.parse
-                Ssh_agent.ssh_agent_message
+                Ssh_agent.Parse.ssh_agent_message
                 inc with
     | unconsumed, Ok (Any_response (Ssh_agent_identities_answer pubkeys)) ->
       let%lwt () = Lwt_io.printf "%d keys\n" (List.length pubkeys) in
@@ -33,11 +33,11 @@ let main () =
     | unconsumed, Error e ->
       Lwt.fail_with (Printf.sprintf "Error: %s\n" e) in
   let%lwt () = Lwt_io.write outc
-      (with_faraday (fun buf ->
-           Ssh_agent.write_ssh_agent_request buf Ssh_agentc_remove_all_identities)) in
+      (Serialize.with_faraday (fun buf ->
+           Serialize.write_ssh_agent_request buf Ssh_agentc_remove_all_identities)) in
   let%lwt () =
     match%lwt Angstrom_lwt_unix.parse
-                Ssh_agent.ssh_agent_message
+                Ssh_agent.Parse.ssh_agent_message
                 inc with
     | unconsumed, Ok (Any_response Ssh_agent_success) ->
       Lwt_io.printl "Success!"
@@ -50,11 +50,11 @@ let main () =
   (*let%lwt () = Lwt_cstruct.complete (Lwt_cstruct.write fd) @@
     cstruct_of_ssh_agent_request Ssh_agentc_request_identities in*)
   let%lwt () = Lwt_io.write outc
-      (with_faraday (fun buf ->
-           Ssh_agent.write_ssh_agent_request buf Ssh_agentc_request_identities)) in
+      (Serialize.with_faraday (fun buf ->
+           Serialize.write_ssh_agent_request buf Ssh_agentc_request_identities)) in
   let%lwt () =
     match%lwt Angstrom_lwt_unix.parse
-                Ssh_agent.ssh_agent_message
+                Ssh_agent.Parse.ssh_agent_message
                 inc with
     | unconsumed, Ok (Any_response (Ssh_agent_identities_answer pubkeys)) ->
       let%lwt () = Lwt_io.printf "%d keys\n" (List.length pubkeys) in
