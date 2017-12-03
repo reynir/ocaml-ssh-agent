@@ -28,9 +28,6 @@ type ssh_agent =
   | SSH_AGENT_EXTENSION_FAILURE [@id 28]
 [@@uint8_t][@@sexp]]
 
-let write_ssh_agent t ssh_agent =
-  Wire.write_byte t (ssh_agent_to_int ssh_agent)
-
 [%%cenum
 type sign_flag =
   | SSH_AGENT_RSA_SHA2_256 [@id 2]
@@ -44,20 +41,8 @@ let mask_to_sign_flags mask =
     else [] in
   List.concat (List.map (mask_test mask) [SSH_AGENT_RSA_SHA2_256; SSH_AGENT_RSA_SHA2_512])
 
-let write_sign_flags t sign_flags =
-  let flags = List.fold_left (fun acc sign_flag ->
-      sign_flag_to_int sign_flag lor acc)
-      0 sign_flags in
-  flags |> Int32.of_int |> Wire.write_uint32 t
-
 (* TODO: constraint types *)
 type key_constraint = {
   constraint_type : int;
   constraint_data : string;
 }
-
-let write_key_constraints t constraints =
-  List.iter (fun { constraint_type; constraint_data } ->
-      Faraday.write_uint8 t constraint_type;
-      Faraday.write_string t constraint_data)
-    constraints

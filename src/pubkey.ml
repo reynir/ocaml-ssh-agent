@@ -49,20 +49,3 @@ type identity = {
   pubkey : t;
   comment : string;
 }
-
-let write_pubkey t pubkey =
-  match pubkey with
-  | Ssh_dss { p; q; gg; y } ->
-    Wire.write_string t "ssh-dss";
-    Wire.write_mpint t p;
-    Wire.write_mpint t q;
-    Wire.write_mpint t gg;
-    Wire.write_mpint t y
-  | Ssh_rsa { e; n } ->
-    Wire.write_string t "ssh-rsa";
-    Wire.write_mpint t e;
-    Wire.write_mpint t n
-  | Blob { key_type; key_blob } ->
-    Wire.write_string t key_type;
-    Faraday.write_string t key_blob
-

@@ -46,25 +46,3 @@ let privkey =
     blob key_type
 
 let comment = Wire.string
-
-let write_privkey t privkey =
-  match privkey with
-  | Ssh_dss { p; q; gg; x; y } ->
-    Wire.write_string t "ssh-dss";
-    Wire.write_mpint t p;
-    Wire.write_mpint t q;
-    Wire.write_mpint t gg;
-    Wire.write_mpint t y;
-    Wire.write_mpint t x
-  | Ssh_rsa { e; d; n; p; q; dp; dq; q' } ->
-    (* iqmp (inverse of q modulo p) is q' *)
-    Wire.write_string t "ssh-rsa";
-    Wire.write_mpint t n;
-    Wire.write_mpint t e;
-    Wire.write_mpint t d;
-    Wire.write_mpint t q';
-    Wire.write_mpint t p;
-    Wire.write_mpint t q
-  | Blob { key_type; key_blob } ->
-    Wire.write_string t key_type;
-    Faraday.write_string t key_blob
