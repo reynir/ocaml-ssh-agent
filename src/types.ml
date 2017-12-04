@@ -31,6 +31,14 @@ type identity = {
   comment : string;
 }
 
+type sign_flag = Protocol_number.sign_flag
+
+(* TODO: constraint types *)
+type key_constraint = {
+  constraint_type : int;
+  constraint_data : string;
+}
+
 type ssh_agent_request_type = [
   | `Ssh_agentc_request_identities
   | `Ssh_agentc_sign_request
@@ -74,11 +82,11 @@ type _ ssh_agent_request =
     -> [`Ssh_agentc_unlock] ssh_agent_request
   | Ssh_agentc_add_id_constrained :
       { key_type : string; key_contents : string;
-        key_comment : string; key_constraints : Protocol_number.key_constraint list }
+        key_comment : string; key_constraints : key_constraint list }
     -> [`Ssh_agentc_add_id_constrained] ssh_agent_request
   | Ssh_agentc_add_smartcard_key_constrained :
       { smartcard_id : string; smartcard_pin : string;
-        smartcard_constraints : Protocol_number.key_constraint list }
+        smartcard_constraints : key_constraint list }
     -> [`Ssh_agentc_add_smartcard_key_constrained] ssh_agent_request
   | Ssh_agentc_extension :
       { extension_type : string; extension_contents : string }

@@ -40,9 +40,3 @@ let mask_to_sign_flags mask =
     then [flag]
     else [] in
   List.concat (List.map (mask_test mask) [SSH_AGENT_RSA_SHA2_256; SSH_AGENT_RSA_SHA2_512])
-
-(* TODO: constraint types *)
-type key_constraint = {
-  constraint_type : int;
-  constraint_data : string;
-}
