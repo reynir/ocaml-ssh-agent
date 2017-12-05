@@ -91,8 +91,9 @@ type any_ssh_agent_request =
 type _ ssh_agent_response =
   | Ssh_agent_failure : [<ssh_agent_request_type] ssh_agent_response
   | Ssh_agent_success : [`Ssh_agentc_successable] ssh_agent_response
-        (* TODO: refine when success can happen *)
   | Ssh_agent_extension_failure : [`Ssh_agentc_extension] ssh_agent_response
+  | Ssh_agent_extension_success : string
+    -> [`Ssh_agentc_extension] ssh_agent_response
   | Ssh_agent_identities_answer : identity list
     -> [`Ssh_agentc_request_identities] ssh_agent_response
   | Ssh_agent_sign_response : string

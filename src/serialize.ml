@@ -153,6 +153,9 @@ let write_ssh_agent_response t (type a) (resp : a ssh_agent_response) =
         write_protocol_number t SSH_AGENT_SUCCES
       | Ssh_agent_extension_failure ->
         write_protocol_number t SSH_AGENT_EXTENSION_FAILURE
+      | Ssh_agent_extension_success data ->
+        write_protocol_number t SSH_AGENT_SUCCES;
+        Faraday.write_string t data
       | Ssh_agent_identities_answer ids ->
         write_protocol_number t SSH_AGENT_IDENTITIES_ANSWER;
         Wire.write_uint32 t (Int32.of_int (List.length ids));

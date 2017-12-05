@@ -7,7 +7,9 @@ let request ((ic, oc) : in_channel * out_channel)
     Ssh_agent.Serialize.write_ssh_agent_request buf request;
     output_string oc (Faraday.serialize_to_string buf);
     flush oc in
-  match Angstrom_unix.parse Ssh_agent.Parse.ssh_agent_message ic with
+  match Angstrom_unix.parse
+          (Ssh_agent.Parse.ssh_agent_message ~extension:(Ssh_agent.is_extension_request request))
+          ic with
   | { len = 0; _ }, Ok response ->
     let open Ssh_agent in
     let success_or_fail (resp : Ssh_agent.any_ssh_agent_response)
@@ -39,6 +41,8 @@ let request ((ic, oc) : in_channel * out_channel)
      | Ssh_agent.Ssh_agentc_extension _ ->
        begin match response with
          | Any_response (Ssh_agent_extension_failure as r) ->
+           Ok r
+         | Any_response (Ssh_agent_extension_success _ as r) ->
            Ok r
          | Any_response (Ssh_agent_failure as r) ->
            Ok r

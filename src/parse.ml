@@ -132,7 +132,12 @@ let ssh_agent_sign_response =
   Wire.string >>= fun signature ->
   return (Ssh_agent_sign_response signature)
 
-let ssh_agent_message_type =
+let ssh_agent_extension_success =
+  let open Angstrom in
+  take_while (fun _ -> true) >>= fun data ->
+  return (Ssh_agent_extension_success data)
+
+let ssh_agent_message_type extension =
   let open Angstrom in
   Angstrom.any_uint8 >>|
   Protocol_number.int_to_ssh_agent >>=
@@ -140,7 +145,9 @@ let ssh_agent_message_type =
   | Some SSH_AGENT_FAILURE ->
     return (Any_response Ssh_agent_failure)
   | Some SSH_AGENT_SUCCES ->
-    return (Any_response Ssh_agent_success)
+    if extension
+    then (ssh_agent_extension_success >>| fun r -> Any_response r)
+    else return (Any_response Ssh_agent_success)
   | Some SSH_AGENT_IDENTITIES_ANSWER ->
     ssh_agent_identities_answer >>| fun identities ->
     Any_response (Ssh_agent_identities_answer identities)
@@ -154,11 +161,11 @@ let ssh_agent_message_type =
     fail "Unknown ssh-agent protocol number"
 
 
-let ssh_agent_message =
+let ssh_agent_message ~extension =
   let open Angstrom in
   BE.int32 >>= fun msg_len ->
   parse_lift (take32 msg_len)
-    ssh_agent_message_type
+    (ssh_agent_message_type extension)
 
 let ssh_agentc_sign_request =
   let open Angstrom in
