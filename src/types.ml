@@ -83,7 +83,6 @@ type _ ssh_agent_request =
   | Ssh_agentc_extension :
       { extension_type : string; extension_contents : string }
     -> [`Ssh_agentc_extension] ssh_agent_request
-  (** extension type * extension contents *)
 
 type any_ssh_agent_request =
   Any_request : 'a ssh_agent_request -> any_ssh_agent_request
