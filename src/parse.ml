@@ -265,7 +265,7 @@ let unpack_any_response (type a) (request : a ssh_agent_request) (response : any
   in
   match request with
   | Ssh_agentc_request_identities ->
-    begin match (response : any_ssh_agent_response) with
+    begin match response with
       | Any_response (Ssh_agent_identities_answer _ as r) ->
         Ok r
       | Any_response (Ssh_agent_failure as r) ->
