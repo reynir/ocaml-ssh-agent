@@ -100,3 +100,6 @@ type _ ssh_agent_response =
 
 type any_ssh_agent_response =
   Any_response : 'a ssh_agent_response -> any_ssh_agent_response
+
+type request_handler =
+  { handle : 'a . 'a ssh_agent_request -> 'a ssh_agent_response; }
