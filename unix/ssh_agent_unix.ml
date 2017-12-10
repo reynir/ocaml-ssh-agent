@@ -16,3 +16,13 @@ let request ((ic, oc) : in_channel * out_channel)
     Error "Additional data in reply"
   | _, Error e ->
     Error ("Parse error: " ^ e)
+
+let listen ((ic, oc) : in_channel * out_channel)
+    (handler : 'a Ssh_agent.ssh_agent_request -> 'a Ssh_agent.ssh_agent_response) =
+  match Angstrom_unix.parse Ssh_agent.Parse.ssh_agentc_message ic with
+  | { len = 0; _ }, Ok (Ssh_agent.Any_request request) ->
+    Ok (Ssh_agent.Any_response (handler request))
+  | { len; _ }, Ok _ ->
+    Error "Additional data in request"
+  | _, Error e ->
+    Error e
