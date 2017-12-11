@@ -1,6 +1,10 @@
 (jbuild_version 1)
 
 (executable
- ((name driver)
-  (preprocess (pps (lwt.ppx)))
-  (libraries (ssh-agent cstruct nocrypto lwt.ppx ssh-agent-unix))))
+ ((name test)
+  (libraries (ssh-agent alcotest nocrypto.unix))))
+
+(alias
+ ((name runtest)
+  (deps (test.exe))
+  (action (run ${<}))))
