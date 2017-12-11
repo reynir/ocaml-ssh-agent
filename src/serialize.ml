@@ -121,10 +121,10 @@ let write_ssh_agent_request t (type a) (req : a ssh_agent_request) =
         Wire.write_string t smartcard_reader_pin
       | Ssh_agentc_lock passphrase ->
         write_protocol_number t SSH_AGENTC_LOCK;
-        Faraday.write_string t passphrase
+        Wire.write_string t passphrase
       | Ssh_agentc_unlock passphrase ->
         write_protocol_number t SSH_AGENTC_UNLOCK;
-        Faraday.write_string t passphrase
+        Wire.write_string t passphrase
       | Ssh_agentc_add_id_constrained { privkey; key_comment; key_constraints } ->
         write_protocol_number t SSH_AGENTC_ADD_ID_CONSTRAINED;
         write_privkey t privkey;
