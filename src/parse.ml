@@ -183,7 +183,7 @@ let ssh_agentc_add_identity =
 
 let ssh_agentc_remove_identity =
   let open Angstrom in
-  pubkey >>= fun pubkey ->
+  parse_lift Wire.string pubkey >>= fun pubkey ->
   return (Ssh_agentc_remove_identity pubkey)
 
 let ssh_agentc_add_smartcard_key =
