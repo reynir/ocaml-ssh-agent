@@ -73,8 +73,7 @@ type _ ssh_agent_request =
       string
     -> [`Ssh_agentc_successable] ssh_agent_request
   | Ssh_agentc_add_id_constrained :
-      { key_type : string; key_contents : string;
-        key_comment : string; key_constraints : key_constraint list }
+      { privkey : Privkey.t; key_comment : string; key_constraints : key_constraint list }
     -> [`Ssh_agentc_successable] ssh_agent_request
   | Ssh_agentc_add_smartcard_key_constrained :
       { smartcard_id : string; smartcard_pin : string;
