@@ -226,7 +226,7 @@ let ssh_agentc_message_type =
     | Some SSH_AGENTC_SIGN_REQUEST ->
       req ssh_agentc_sign_request
     | Some SSH_AGENTC_ADD_IDENTITY ->
-      fail "Not implemented"
+      req ssh_agentc_add_identity
     | Some SSH_AGENTC_REMOVE_IDENTITY ->
       req ssh_agentc_remove_identity
     | Some SSH_AGENTC_REMOVE_ALL_IDENTITIES ->
