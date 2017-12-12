@@ -2,7 +2,10 @@
 module Request : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request = struct
   type t = Ssh_agent.any_ssh_agent_request
   let pp fmt (t : Ssh_agent.any_ssh_agent_request) =
-    Fmt.string fmt "TODO:any_ssh_agent_request"
+    Fmt.string fmt
+      (Ssh_agent.sexp_of_any_ssh_agent_request t
+       |> Sexplib.Sexp.to_string)
+
   let equal (x1 : t) (x2 : t) =
     let open Ssh_agent in
     match x1, x2 with
