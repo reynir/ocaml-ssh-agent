@@ -154,6 +154,8 @@ let ssh_agent_message_type extension =
   | Some SSH_AGENT_SIGN_RESPONSE ->
     ssh_agent_sign_response >>| fun r ->
     Any_response r
+  | Some SSH_AGENT_EXTENSION_FAILURE ->
+    return (Any_response (Ssh_agent_extension_failure))
   | Some protocol_number ->
     fail ("Unimplemeted protocol number: " ^
           ssh_agent_to_string protocol_number)
