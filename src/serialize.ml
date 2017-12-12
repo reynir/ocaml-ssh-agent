@@ -87,7 +87,7 @@ let write_sign_flags t sign_flags =
   flags |> Int32.of_int |> Wire.write_uint32 t
 
 let write_key_constraints t constraints =
-  List.iter (fun Protocol_number.{ constraint_type; constraint_data } ->
+  List.iter (fun { constraint_type; constraint_data } ->
       Faraday.write_uint8 t constraint_type;
       Faraday.write_string t constraint_data)
     constraints
@@ -157,7 +157,7 @@ let write_ssh_agent_response t (type a) (resp : a ssh_agent_response) =
       | Ssh_agent_identities_answer ids ->
         write_protocol_number t SSH_AGENT_IDENTITIES_ANSWER;
         Wire.write_uint32 t (Int32.of_int (List.length ids));
-        List.iter (fun Pubkey.{ pubkey; comment } ->
+        List.iter (fun { pubkey; comment } ->
             Wire.write_string t (with_faraday (fun t -> write_pubkey t pubkey));
             Wire.write_string t comment)
           ids
