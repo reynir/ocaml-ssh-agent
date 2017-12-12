@@ -136,8 +136,10 @@ let write_ssh_agent_request t (type a) (req : a ssh_agent_request) =
         Wire.write_string t smartcard_id;
         Wire.write_string t smartcard_pin;
         write_key_constraints t smartcard_constraints
-      | Ssh_agentc_extension _ ->
-        failwith "Not implemented"
+      | Ssh_agentc_extension { extension_type; extension_contents } ->
+        write_protocol_number t SSH_AGENTC_EXTENSION;
+        Wire.write_string t extension_type;
+        Faraday.write_string t extension_contents
     ) in
   Wire.write_uint32 t (Int32.of_int (String.length message));
   Faraday.write_string t message
