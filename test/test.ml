@@ -57,7 +57,35 @@ module Request : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request
       (* FIXME: unordered list in the constraints *)
 end
 
-let m_request = (module Request : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request)
+module Response : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_response = struct
+  type t = Ssh_agent.any_ssh_agent_response
+  let pp fmt (t : Ssh_agent.any_ssh_agent_response) =
+    Fmt.string fmt
+      (Ssh_agent.sexp_of_any_ssh_agent_response t
+       |> Sexplib.Sexp.to_string)
+  let equal (x1 : t) (x2 : t) =
+    let open Ssh_agent in
+    match x1, x2 with
+    | Any_response Ssh_agent_failure, Any_response Ssh_agent_failure -> true
+    | Any_response Ssh_agent_success, Any_response Ssh_agent_success -> true
+    | Any_response Ssh_agent_extension_failure, Any_response Ssh_agent_extension_failure -> true
+    | Any_response (Ssh_agent_extension_success d1),
+      Any_response (Ssh_agent_extension_success d2) ->
+      d1 = d2
+    | Any_response (Ssh_agent_identities_answer ids1),
+      Any_response (Ssh_agent_identities_answer ids2) ->
+      ids1 = ids2
+    | Any_response (Ssh_agent_sign_response sig1),
+      Any_response (Ssh_agent_sign_response sig2) ->
+      sig1 = sig2
+    | _, _ -> false
+end
+
+let m_request = (module Request
+                  : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request)
+let m_response = (module Response
+                   : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_response)
+
 
 let () = Nocrypto_entropy_unix.initialize ()
 let privkey = Nocrypto.Rsa.generate 1024
@@ -105,7 +133,7 @@ let serialize_parse_extension () =
   serialize_parse "serialize_parse_extension"
     (Ssh_agent.Ssh_agentc_extension { extension_type = "query"; extension_contents = "" })
 
-let serialize_parse = [
+let serialize_parse_client = [
   "request_identities", `Quick, serialize_parse_request_identities;
   "sign_request", `Quick, serialize_parse_sign_request;
   "add_identity", `Quick, serialize_parse_add_identity;
@@ -116,7 +144,57 @@ let serialize_parse = [
   "extension", `Quick, serialize_parse_extension;
 ]
 
+let serialize_parse_response s (response : 'a Ssh_agent.ssh_agent_response) =
+  let extension = match Ssh_agent.Any_response response with
+    | Ssh_agent.Any_response Ssh_agent.Ssh_agent_extension_failure ->
+      true
+    | Ssh_agent.Any_response (Ssh_agent.Ssh_agent_extension_success _) ->
+      true
+    | _ -> false in
+  Alcotest.(check m_response) s (Ssh_agent.Any_response response)
+    (let r = Ssh_agent.Serialize.(with_faraday (fun t ->
+         write_ssh_agent_response t response)) in
+     match Angstrom.parse_string
+             (Ssh_agent.Parse.ssh_agent_message ~extension)
+             r with
+     | Result.Ok req -> req
+     | Result.Error e -> failwith e)
+
+let serialize_parse_failure () =
+  serialize_parse_response "serialize_parse_failure"
+    Ssh_agent.Ssh_agent_failure
+
+let serialize_parse_success () =
+  serialize_parse_response "serialize_parse_success"
+    Ssh_agent.Ssh_agent_success
+
+let serialize_parse_extension_failure () =
+  serialize_parse_response "serialize_parse_extension_failure"
+    Ssh_agent.Ssh_agent_extension_failure
+
+let serialize_parse_extension_success () =
+  serialize_parse_response "serialize_parse_extension_success"
+    (Ssh_agent.Ssh_agent_extension_success "Hello, World!")
+
+let serialize_parse_identities_answer () =
+  serialize_parse_response "serialize_parse_identities_answer"
+    (Ssh_agent.Ssh_agent_identities_answer
+       [ { pubkey; comment = "KEY COMMENT" } ])
+
+let serialize_parse_sign_response () =
+  serialize_parse_response "serialize_parse_sign_response"
+    (Ssh_agent.Ssh_agent_sign_response "This is definitely a signature")
+
+let serialize_parse_server = [
+  "failure", `Quick, serialize_parse_failure;
+  "extension_failure", `Quick, serialize_parse_extension_failure;
+  "extension_success", `Quick, serialize_parse_extension_success;
+  "identities_answer", `Quick, serialize_parse_identities_answer;
+  "sign_response", `Quick, serialize_parse_sign_response;
+]
 
 let () =
-  Alcotest.run "Serialize |> Parse identity"
-    [ "serialize_parse", serialize_parse ]
+  Alcotest.run "Serialize |> Parse identity" [
+    "serialize_parse_client", serialize_parse_client;
+    "serialize_parse_server", serialize_parse_server;
+  ]
