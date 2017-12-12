@@ -47,6 +47,9 @@ module Request : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request
       Any_request (Ssh_agentc_add_smartcard_key_constrained
                      { smartcard_id = t2; smartcard_pin = pin2; smartcard_constraints = c2 }) ->
       t1 = t2 && pin1 = pin2 && c1 = c2
+    | Any_request (Ssh_agentc_extension { extension_type = t1; extension_contents = c1 }),
+      Any_request (Ssh_agentc_extension { extension_type = t2; extension_contents = c2 }) ->
+      t1 = t2 && c1 = c2
     | _, _ -> false
       (* FIXME: unordered list in the constraints *)
 end
@@ -95,6 +98,10 @@ let serialize_parse_unlock () =
   serialize_parse "serialize_parse_unlock"
     (Ssh_agent.Ssh_agentc_unlock "your favorite passphrase")
 
+let serialize_parse_extension () =
+  serialize_parse "serialize_parse_extension"
+    (Ssh_agent.Ssh_agentc_extension { extension_type = "query"; extension_contents = "" })
+
 let serialize_parse = [
   "request_identities", `Quick, serialize_parse_request_identities;
   "sign_request", `Quick, serialize_parse_sign_request;
@@ -103,6 +110,7 @@ let serialize_parse = [
   "remove_all_identities", `Quick, serialize_parse_remove_all_identities;
   "lock", `Quick, serialize_parse_lock;
   "unlock", `Quick, serialize_parse_unlock;
+  "extension", `Quick, serialize_parse_extension;
 ]
 
 
