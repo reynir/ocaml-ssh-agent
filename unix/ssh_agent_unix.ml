@@ -11,7 +11,7 @@ let request ((ic, oc) : in_channel * out_channel)
           (Ssh_agent.Parse.ssh_agent_message ~extension:(Ssh_agent.is_extension_request request))
           ic with
   | { len = 0; _ }, Ok response ->
-    Ssh_agent.Parse.unpack_any_response request response
+    Ssh_agent.unpack_any_response request response
   | { len; _ }, Ok _ ->
     Error "Additional data in reply"
   | _, Error e ->
