@@ -1,0 +1,8 @@
+(jbuild_version 1)
+
+(executable
+ ((name ssh_agent_server)
+  (public_name ssh-agent-server)
+  (package ssh-agent)
+  (libraries (ssh-agent ssh-agent-unix nocrypto nocrypto.unix))))
+
