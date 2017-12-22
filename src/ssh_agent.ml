@@ -23,4 +23,6 @@ let sign priv (sign_flags : Protocol_number.sign_flag list) blob =
       else let digest = Nocrypto.Hash.SHA1.digest (Cstruct.of_string blob) in
         Cstruct.append Util.id_sha1 digest in
     let signed = Nocrypto.Rsa.PKCS1.sig_encode ~key to_sign in
-    Cstruct.to_string signed
+    Serialize.(with_faraday (fun t ->
+        Wire.write_string t "ssh-rsa";
+        Wire.write_string t (Cstruct.to_string signed)))
