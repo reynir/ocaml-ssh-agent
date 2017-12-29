@@ -59,8 +59,6 @@ let unpack_any_response (type a) (request : a ssh_agent_request) (response : any
 
 let sign priv (sign_flags : Protocol_number.sign_flag list) blob =
   match priv with
-  | Privkey.Ssh_dss key ->
-    failwith "Not implemented :-("
   | Privkey.Ssh_rsa key ->
     let alg_string, to_sign =
       if List.mem Protocol_number.SSH_AGENT_RSA_SHA2_512 sign_flags
@@ -75,3 +73,6 @@ let sign priv (sign_flags : Protocol_number.sign_flag list) blob =
     Serialize.(with_faraday (fun t ->
         Wire.write_string t alg_string;
         Wire.write_string t (Cstruct.to_string signed)))
+  | Privkey.Ssh_dss _
+  | Privkey.Blob _ ->
+    failwith "Not implemented :-("
