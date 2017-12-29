@@ -69,8 +69,8 @@ module Response : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_respon
     | Any_response Ssh_agent_failure, Any_response Ssh_agent_failure -> true
     | Any_response Ssh_agent_success, Any_response Ssh_agent_success -> true
     | Any_response Ssh_agent_extension_failure, Any_response Ssh_agent_extension_failure -> true
-    | Any_response (Ssh_agent_extension_success d1),
-      Any_response (Ssh_agent_extension_success d2) ->
+    | Any_response (Ssh_agent_extension_blob d1),
+      Any_response (Ssh_agent_extension_blob d2) ->
       d1 = d2
     | Any_response (Ssh_agent_identities_answer ids1),
       Any_response (Ssh_agent_identities_answer ids2) ->
@@ -148,7 +148,7 @@ let serialize_parse_response s (response : 'a Ssh_agent.ssh_agent_response) =
   let extension = match Ssh_agent.Any_response response with
     | Ssh_agent.Any_response Ssh_agent.Ssh_agent_extension_failure ->
       true
-    | Ssh_agent.Any_response (Ssh_agent.Ssh_agent_extension_success _) ->
+    | Ssh_agent.Any_response (Ssh_agent.Ssh_agent_extension_blob _) ->
       true
     | _ -> false in
   Alcotest.(check m_response) s (Ssh_agent.Any_response response)
@@ -172,9 +172,10 @@ let serialize_parse_extension_failure () =
   serialize_parse_response "serialize_parse_extension_failure"
     Ssh_agent.Ssh_agent_extension_failure
 
-let serialize_parse_extension_success () =
-  serialize_parse_response "serialize_parse_extension_success"
-    (Ssh_agent.Ssh_agent_extension_success "Hello, World!")
+let serialize_parse_extension_blob () =
+  serialize_parse_response "serialize_parse_extension_blob"
+    (Ssh_agent.Ssh_agent_extension_blob "Hello, World!")
+    (* You should probably never write an extension like this *)
 
 let serialize_parse_identities_answer () =
   serialize_parse_response "serialize_parse_identities_answer"
@@ -188,7 +189,7 @@ let serialize_parse_sign_response () =
 let serialize_parse_server = [
   "failure", `Quick, serialize_parse_failure;
   "extension_failure", `Quick, serialize_parse_extension_failure;
-  "extension_success", `Quick, serialize_parse_extension_success;
+  "extension_blob", `Quick, serialize_parse_extension_blob;
   "identities_answer", `Quick, serialize_parse_identities_answer;
   "sign_response", `Quick, serialize_parse_sign_response;
 ]

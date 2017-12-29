@@ -40,7 +40,7 @@ let unpack_any_response (type a) (request : a ssh_agent_request) (response : any
     begin match response with
       | Any_response (Ssh_agent_extension_failure as r) ->
         Ok r
-      | Any_response (Ssh_agent_extension_success _ as r) ->
+      | Any_response (Ssh_agent_extension_blob _ as r) ->
         Ok r
       | Any_response (Ssh_agent_failure as r) ->
         Ok r

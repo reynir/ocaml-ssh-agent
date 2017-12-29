@@ -132,35 +132,45 @@ let ssh_agent_sign_response =
   Wire.string >>= fun signature ->
   return (Ssh_agent_sign_response signature)
 
-let ssh_agent_extension_success =
-  let open Angstrom in
-  take_while (fun _ -> true) >>= fun data ->
-  return (Ssh_agent_extension_success data)
-
-let ssh_agent_message_type extension =
+let ssh_agent_extension_failure =
   let open Angstrom in
   Angstrom.any_uint8 >>|
   Protocol_number.int_to_ssh_agent >>=
   let open Protocol_number in function
-  | Some SSH_AGENT_FAILURE ->
-    return (Any_response Ssh_agent_failure)
-  | Some SSH_AGENT_SUCCES ->
-    if extension
-    then (ssh_agent_extension_success >>| fun r -> Any_response r)
-    else return (Any_response Ssh_agent_success)
-  | Some SSH_AGENT_IDENTITIES_ANSWER ->
-    ssh_agent_identities_answer >>| fun identities ->
-    Any_response (Ssh_agent_identities_answer identities)
-  | Some SSH_AGENT_SIGN_RESPONSE ->
-    ssh_agent_sign_response >>| fun r ->
-    Any_response r
-  | Some SSH_AGENT_EXTENSION_FAILURE ->
-    return (Any_response (Ssh_agent_extension_failure))
-  | Some protocol_number ->
-    fail ("Unimplemeted protocol number: " ^
-          ssh_agent_to_string protocol_number)
-  | None ->
-    fail "Unknown ssh-agent protocol number"
+    | Some SSH_AGENT_FAILURE ->
+      return (Any_response Ssh_agent_failure)
+    | Some SSH_AGENT_EXTENSION_FAILURE ->
+      return (Any_response Ssh_agent_extension_failure)
+    | _ -> fail "Goto extension blob"
+
+let ssh_agent_message_type extension =
+  let open Angstrom in
+  if extension
+  then
+    ssh_agent_extension_failure <|>
+    (take_while (fun _ -> true) >>= fun data ->
+     return (Any_response (Ssh_agent_extension_blob data)))
+  else
+    Angstrom.any_uint8 >>|
+    Protocol_number.int_to_ssh_agent >>=
+    let open Protocol_number in function
+      | Some SSH_AGENT_FAILURE ->
+        return (Any_response Ssh_agent_failure)
+      | Some SSH_AGENT_SUCCES ->
+        return (Any_response Ssh_agent_success)
+      | Some SSH_AGENT_IDENTITIES_ANSWER ->
+        ssh_agent_identities_answer >>| fun identities ->
+        Any_response (Ssh_agent_identities_answer identities)
+      | Some SSH_AGENT_SIGN_RESPONSE ->
+        ssh_agent_sign_response >>| fun r ->
+        Any_response r
+      | Some SSH_AGENT_EXTENSION_FAILURE ->
+        return (Any_response (Ssh_agent_extension_failure))
+      | Some protocol_number ->
+        fail ("Unimplemeted protocol number: " ^
+              ssh_agent_to_string protocol_number)
+      | None ->
+        fail "Unknown ssh-agent protocol number"
 
 
 let ssh_agent_message ~extension =
