@@ -87,9 +87,12 @@ let write_sign_flags t sign_flags =
   flags |> Int32.of_int |> Wire.write_uint32 t
 
 let write_key_constraints t constraints =
-  List.iter (fun { constraint_type; constraint_data } ->
-      Faraday.write_uint8 t constraint_type;
-      Faraday.write_string t constraint_data)
+  List.iter (function
+      | Lifetime secs ->
+        Faraday.write_uint8 t 1;
+        Wire.write_uint32 t secs
+      | Confirm ->
+        Faraday.write_uint8 t 2)
     constraints
 
 let write_ssh_agent_request t (type a) (req : a ssh_agent_request) =

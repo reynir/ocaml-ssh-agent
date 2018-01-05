@@ -43,11 +43,11 @@ type identity = {
 type sign_flag = Protocol_number.sign_flag
 [@@deriving sexp]
 
-(* TODO: constraint types *)
-type key_constraint = {
-  constraint_type : int;
-  constraint_data : string;
-}
+type key_constraint =
+  | Lifetime of int32 (* uint32 *)
+  | Confirm
+  (* Extensions are not implemented because the extension-specific data has
+   * unknown length. *)
 [@@deriving sexp]
 
 type ssh_agent_request_type = [

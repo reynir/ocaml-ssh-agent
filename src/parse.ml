@@ -187,11 +187,28 @@ let ssh_agentc_sign_request =
   let flags = Protocol_number.mask_to_sign_flags (Int32.to_int mask) in
   return (Ssh_agentc_sign_request (pubkey, data, flags))
 
+let key_constraint =
+  let open Angstrom in
+  any_uint8 >>= function
+  | 1 ->
+    Wire.uint32 >>= fun secs -> return (Lifetime secs)
+  | 2 ->
+    return Confirm
+  | _ ->
+    fail "Unsupported key constraint type"
+
 let ssh_agentc_add_identity =
   let open Angstrom in
   privkey >>= fun privkey ->
   Wire.string >>= fun key_comment ->
   return (Ssh_agentc_add_identity { privkey; key_comment })
+
+let ssh_agentc_add_id_constrained =
+  let open Angstrom in
+  privkey >>= fun privkey ->
+  Wire.string >>= fun key_comment ->
+  many key_constraint >>= fun key_constraints ->
+  return (Ssh_agentc_add_id_constrained { privkey; key_comment; key_constraints })
 
 let ssh_agentc_remove_identity =
   let open Angstrom in
@@ -203,6 +220,14 @@ let ssh_agentc_add_smartcard_key =
   Wire.string >>= fun smartcard_id ->
   Wire.string >>= fun smartcard_pin ->
   return (Ssh_agentc_add_smartcard_key { smartcard_id; smartcard_pin })
+
+let ssh_agentc_add_smartcard_key_constrained =
+  let open Angstrom in
+  Wire.string >>= fun smartcard_id ->
+  Wire.string >>= fun smartcard_pin ->
+  many key_constraint >>= fun smartcard_constraints ->
+  return (Ssh_agentc_add_smartcard_key_constrained
+            { smartcard_id; smartcard_pin; smartcard_constraints })
 
 let ssh_agentc_remove_smartcard_key =
   let open Angstrom in
@@ -252,9 +277,9 @@ let ssh_agentc_message_type =
     | Some SSH_AGENTC_UNLOCK ->
       req ssh_agentc_unlock
     | Some SSH_AGENTC_ADD_ID_CONSTRAINED ->
-      fail "Not implemented"
+      req ssh_agentc_add_id_constrained
     | Some SSH_AGENTC_ADD_SMARTCARD_KEY_CONSTRAINED ->
-      fail "Not implemented"
+      req ssh_agentc_add_smartcard_key_constrained
     | Some SSH_AGENTC_EXTENSION ->
       req ssh_agentc_extension
     | None | Some _ ->

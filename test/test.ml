@@ -50,11 +50,11 @@ module Request : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request
       Any_request (Ssh_agentc_add_smartcard_key_constrained
                      { smartcard_id = t2; smartcard_pin = pin2; smartcard_constraints = c2 }) ->
       t1 = t2 && pin1 = pin2 && c1 = c2
+      (* FIXME: unordered list in the constraints *)
     | Any_request (Ssh_agentc_extension { extension_type = t1; extension_contents = c1 }),
       Any_request (Ssh_agentc_extension { extension_type = t2; extension_contents = c2 }) ->
       t1 = t2 && c1 = c2
     | _, _ -> false
-      (* FIXME: unordered list in the constraints *)
 end
 
 module Response : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_response = struct
@@ -113,6 +113,16 @@ let serialize_parse_add_identity () =
   serialize_parse "serialize_parse_add_identity"
     (Ssh_agent.Ssh_agentc_add_identity { privkey; key_comment = "KEY COMMENT" })
 
+let serialize_parse_add_id_constrained_empty () =
+  serialize_parse "serialize_parse_add_id_constrained"
+    (Ssh_agent.Ssh_agentc_add_id_constrained
+       { privkey; key_comment = "KEY COMMENT"; key_constraints = [] })
+
+let serialize_parse_add_id_constrained_both () =
+  serialize_parse "serialize_parse_add_id_constrained"
+    (Ssh_agent.Ssh_agentc_add_id_constrained
+       { privkey; key_comment = "KEY COMMENT"; key_constraints = [Confirm; Lifetime 5l] })
+
 let serialize_parse_remove_identity () =
   serialize_parse "serialize_parse_remove_identity"
     (Ssh_agent.Ssh_agentc_remove_identity pubkey)
@@ -137,6 +147,8 @@ let serialize_parse_client = [
   "request_identities", `Quick, serialize_parse_request_identities;
   "sign_request", `Quick, serialize_parse_sign_request;
   "add_identity", `Quick, serialize_parse_add_identity;
+  "add_id_constrained_empty", `Quick, serialize_parse_add_id_constrained_empty;
+  "add_id_constrained_both", `Quick, serialize_parse_add_id_constrained_both;
   "remove_identity", `Quick, serialize_parse_remove_identity;
   "remove_all_identities", `Quick, serialize_parse_remove_all_identities;
   "lock", `Quick, serialize_parse_lock;
