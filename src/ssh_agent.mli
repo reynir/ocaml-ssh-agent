@@ -45,6 +45,8 @@ type identity = {
  * [Ssh_agentc_request_identities]. *)
 [@@deriving sexp_of]
 
+(** Flags for what hashing algorithm is desired when doing a signing request.
+ * SHA1 is assumed otherwise. *)
 type sign_flag = Protocol_number.sign_flag =
   | SSH_AGENT_RSA_SHA2_256
   | SSH_AGENT_RSA_SHA2_512
