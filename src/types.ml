@@ -2,10 +2,10 @@ open Sexplib.Conv
 
 module Privkey = struct
   type ssh_dss = Nocrypto.Dsa.priv
-  [@@deriving sexp]
+  [@@deriving sexp_of]
 
   type ssh_rsa = Nocrypto.Rsa.priv
-  [@@deriving sexp]
+  [@@deriving sexp_of]
 
   type t =
     | Ssh_dss of ssh_dss
@@ -14,15 +14,15 @@ module Privkey = struct
         key_type : string;
         key_blob : string;
       }
-  [@@deriving sexp]
+  [@@deriving sexp_of]
 end
 
 module Pubkey = struct
   type ssh_dss = Nocrypto.Dsa.pub
-  [@@deriving sexp]
+  [@@deriving sexp_of]
 
   type ssh_rsa = Nocrypto.Rsa.pub
-  [@@deriving sexp]
+  [@@deriving sexp_of]
 
   type t =
     | Ssh_dss of ssh_dss
@@ -31,24 +31,24 @@ module Pubkey = struct
         key_type : string;
         key_blob : string;
       }
-  [@@deriving sexp]
+  [@@deriving sexp_of]
 end
 
 type identity = {
   pubkey : Pubkey.t;
   comment : string;
 }
-[@@deriving sexp]
+[@@deriving sexp_of]
 
 type sign_flag = Protocol_number.sign_flag
-[@@deriving sexp]
+[@@deriving sexp_of]
 
 type key_constraint =
   | Lifetime of int32 (* uint32 *)
   | Confirm
   (* Extensions are not implemented because the extension-specific data has
    * unknown length. *)
-[@@deriving sexp]
+[@@deriving sexp_of]
 
 type ssh_agent_request_type = [
   | `Ssh_agentc_request_identities
