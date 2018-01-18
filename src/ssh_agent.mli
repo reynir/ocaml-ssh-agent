@@ -1,6 +1,4 @@
-open Sexplib.Conv
-
-module Privkey = struct
+module Privkey : sig
   type ssh_dss = Nocrypto.Dsa.priv
   [@@deriving sexp_of]
 
@@ -14,10 +12,12 @@ module Privkey = struct
         key_type : string;
         key_blob : string;
       }
+    (** [Blob] is an unknown ssh wire string-unwrapped private key of type
+     * [key_type]. *)
   [@@deriving sexp_of]
 end
 
-module Pubkey = struct
+module Pubkey : sig
   type ssh_dss = Nocrypto.Dsa.pub
   [@@deriving sexp_of]
 
@@ -31,6 +31,8 @@ module Pubkey = struct
         key_type : string;
         key_blob : string;
       }
+    (** [Blob] is an unknown ssh wire string-unwrapped public key of type
+     * [key_type]. *)
   [@@deriving sexp_of]
 end
 
@@ -38,6 +40,9 @@ type identity = {
   pubkey : Pubkey.t;
   comment : string;
 }
+(** [identity]s are returned when querying for identities, i.e.
+ * in [Ssh_agent_identities_answer] when responding to
+ * [Ssh_agentc_request_identities]. *)
 [@@deriving sexp_of]
 
 type sign_flag = Protocol_number.sign_flag =
@@ -48,8 +53,15 @@ type sign_flag = Protocol_number.sign_flag =
 type key_constraint =
   | Lifetime of int32 (* uint32 *)
   | Confirm
+  (* Extensions are not implemented because the extension-specific data has
+   * unknown length. This requires making the parser extensible for key
+   * constraints. *)
 [@@deriving sexp_of]
 
+(** [ssh_agent_request_type] is used in the below GADTs for enforcing protocol
+ * semantics. It represents types of requests. The [`Ssh_agentc_successable]
+ * type is a generalization of all requests that expect either success or
+ * failure. *)
 type ssh_agent_request_type = [
   | `Ssh_agentc_request_identities
   | `Ssh_agentc_sign_request
@@ -119,3 +131,33 @@ type any_ssh_agent_response =
 
 type request_handler =
   { handle : 'a . 'a ssh_agent_request -> 'a ssh_agent_response; }
+(** Any function that takes a request and returns a valid response for the
+ * request type *)
+
+module Parse : sig
+  val ssh_agent_message : extension:bool -> any_ssh_agent_response Angstrom.t
+  (** [ssh_agentc_message ~extension] parses an ssh-agent response. If
+   * [extension] is [true], then the message is parsed as a response to a
+   * [Ssh_agentc_extension] request. *)
+  val ssh_agentc_message : any_ssh_agent_request Angstrom.t
+  (** A parser for ssh-agent requests *)
+end
+
+module Serialize : sig
+  val write_ssh_agent_response
+    : Faraday.t -> 'a ssh_agent_response -> unit
+  val write_ssh_agent_request
+    : Faraday.t -> 'a ssh_agent_request -> unit
+end
+
+val is_extension_request
+  : 'a ssh_agent_request -> bool
+(** [is_extension_request request] returns true if [request] is
+ * [Ssh_agentc_extension]. Useful for passing [~extension] to
+ * [ssh_agent_message]. *)
+
+val unpack_any_response
+  : 'a ssh_agent_request -> any_ssh_agent_response
+  -> ('a ssh_agent_response, string) result
+(** [unpack_any_response request response] unpacks [response] if it is a valid
+ * response type with regard to [request], otherwise [Error] is returned. *)
