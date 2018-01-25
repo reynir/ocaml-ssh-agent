@@ -163,3 +163,8 @@ val unpack_any_response
   -> ('a ssh_agent_response, string) result
 (** [unpack_any_response request response] unpacks [response] if it is a valid
  * response type with regard to [request], otherwise [Error] is returned. *)
+
+(** [sign privkey flags blob] returns a signature of [blob] using [privkey]
+ * respecting the hashing algorithms specified by [flags]. Currently, only RSA
+ * signatures are supported. *)
+val sign : Privkey.t -> Protocol_number.sign_flag list -> string -> string
