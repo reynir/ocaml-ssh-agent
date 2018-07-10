@@ -3,9 +3,9 @@
 let main bits key_comment =
   let () = Nocrypto_entropy_unix.initialize () in
   let sock_path =
-    match Sys.getenv_opt "SSH_AUTH_SOCK" with
-    | Some path -> path
-    | None -> failwith "$SSH_AUTH_SOCK not set" in
+    match Sys.getenv "SSH_AUTH_SOCK" with
+    | path -> path
+    | exception Not_found -> failwith "$SSH_AUTH_SOCK not set" in
   let fd = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
   let () = Unix.connect fd Unix.(ADDR_UNIX sock_path) in
   let ic = Unix.in_channel_of_descr fd in
