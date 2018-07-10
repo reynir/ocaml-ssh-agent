@@ -1,3 +1,8 @@
+let with_faraday (f : Faraday.t -> unit) : string =
+  let buf = Faraday.create 1024 in
+  f buf;
+  Faraday.serialize_to_string buf
+
 
 module Request : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request = struct
   type t = Ssh_agent.any_ssh_agent_request
@@ -95,8 +100,8 @@ let pubkey = Ssh_agent.Pubkey.Ssh_rsa pubkey
 
 let serialize_parse s request =
   Alcotest.(check m_request) s (Ssh_agent.Any_request request)
-    (let r = Ssh_agent.Serialize.(with_faraday (fun t ->
-         write_ssh_agent_request t request)) in
+    (let r = with_faraday (fun t ->
+         Ssh_agent.Serialize.write_ssh_agent_request t request) in
      match Angstrom.parse_string Ssh_agent.Parse.ssh_agentc_message r with
      | Result.Ok req -> req
      | Result.Error e -> failwith e)
@@ -164,8 +169,8 @@ let serialize_parse_response s (response : 'a Ssh_agent.ssh_agent_response) =
       true
     | _ -> false in
   Alcotest.(check m_response) s (Ssh_agent.Any_response response)
-    (let r = Ssh_agent.Serialize.(with_faraday (fun t ->
-         write_ssh_agent_response t response)) in
+    (let r = with_faraday (fun t ->
+         Ssh_agent.Serialize.write_ssh_agent_response t response) in
      match Angstrom.parse_string
              (Ssh_agent.Parse.ssh_agent_message ~extension)
              r with
