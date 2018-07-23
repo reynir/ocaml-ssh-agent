@@ -10,20 +10,20 @@ module Wire = struct
     any_char >>| ((<>) '\000')
 
   let uint32 =
-    BE.int32
+    BE.any_int32
 
   let uint64 =
-    BE.int64
+    BE.any_int64
 
   (* XXX: int32 -> int coercion *)
   let string =
-    BE.int32 >>= fun string_len ->
+    BE.any_int32 >>= fun string_len ->
     take (Int32.to_int string_len)
 
   (* XXX: int32 -> int coercion *)
   (* FIXME: negative numbers *)
   let mpint =
-    BE.int32
+    BE.any_int32
     >>= fun mpint_len ->
     if mpint_len = 0l
     then return Z.zero
@@ -124,7 +124,7 @@ let id_entry =
 
 let ssh_agent_identities_answer =
   let open Angstrom in
-  BE.int32 >>= fun nkeys ->
+  BE.any_int32 >>= fun nkeys ->
   count32 nkeys id_entry
 
 let ssh_agent_sign_response =
@@ -175,7 +175,7 @@ let ssh_agent_message_type extension =
 
 let ssh_agent_message ~extension =
   let open Angstrom in
-  BE.int32 >>= fun msg_len ->
+  BE.any_int32 >>= fun msg_len ->
   parse_lift (take32 msg_len)
     (ssh_agent_message_type extension)
 
@@ -287,6 +287,6 @@ let ssh_agentc_message_type =
 
 let ssh_agentc_message =
   let open Angstrom in
-  BE.int32 >>= fun msg_len ->
+  BE.any_int32 >>= fun msg_len ->
   parse_lift (take32 msg_len)
     ssh_agentc_message_type

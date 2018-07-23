@@ -11,8 +11,8 @@ depends: [
   "jbuilder" {build}
   "ppx_cstruct" {build}
   "ppx_sexp_conv" {build}
-  "angstrom"
-  "faraday"
+  "angstrom" {= "0.10"}
+  "faraday" {= "0.6"}
   "nocrypto"
   "cstruct"
 ]
