@@ -15,4 +15,6 @@ depends: [
   "faraday" {>= "0.6" & < "0.7"}
   "nocrypto"
   "cstruct"
+  "alcotest" {test}
+  "sexplib" {test}
 ]
