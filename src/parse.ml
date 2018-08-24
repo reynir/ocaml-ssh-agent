@@ -99,6 +99,47 @@ let pub_ssh_rsa =
   Wire.mpint >>= fun n ->
   return (Pubkey.Ssh_rsa { e; n })
 
+let string_tuple =
+  let open Angstrom in
+  Wire.string >>= fun name ->
+  Wire.string >>= fun data ->
+  return (name, data)
+
+let pub_ssh_rsa_cert =
+  let open Angstrom in
+  Wire.string >>= fun nonce ->
+  Wire.mpint >>= fun e ->
+  Wire.mpint >>= fun n ->
+  Wire.uint64 >>= fun serial ->
+  Wire.uint32 >>= fun typ ->
+  match Protocol_number.int_to_ssh_cert_type typ with
+  | None -> Angstrom.fail "Unknown ssh cert type"
+  | Some typ ->
+    Wire.string >>= fun key_id ->
+    Wire.name_list >>= fun valid_principals ->
+    Wire.uint64 >>= fun valid_before ->
+    Wire.uint64 >>= fun valid_after ->
+    parse_lift Wire.string (Angstrom.many string_tuple) >>= fun critical_options ->
+    parse_lift Wire.string (Angstrom.many string_tuple) >>= fun extensions ->
+    Wire.string >>= fun reserved ->
+    Wire.string >>= fun signature_key ->
+    Wire.string >>= fun signature ->
+    return (Pubkey.Ssh_rsa_cert {
+        nonce;
+        pubkey = { e; n };
+        serial;
+        typ;
+        key_id;
+        valid_principals;
+        valid_after;
+        valid_before;
+        critical_options;
+        extensions;
+        reserved;
+        signature_key;
+        signature;
+      })
+
 let pub_blob key_type =
   Angstrom.(take_while (fun _ -> true) >>= fun key_blob ->
             return @@ Pubkey.Blob { key_type; key_blob; })
@@ -110,6 +151,8 @@ let pubkey =
     pub_ssh_dss
   | "ssh-rsa" ->
     pub_ssh_rsa
+  | "ssh-rsa-cert-v01@openssh.com" as key_type ->
+    pub_blob key_type
   | key_type ->
     pub_blob key_type
 

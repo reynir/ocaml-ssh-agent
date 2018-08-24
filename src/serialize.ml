@@ -60,6 +60,13 @@ let write_privkey t key =
     Wire.write_string t key_type;
     Faraday.write_string t key_blob
 
+let write_tuple t (name, data) =
+  Wire.write_string t name;
+  Wire.write_string t data
+
+let write_tuples t tuples =
+  List.iter (write_tuple t) tuples
+
 let write_pubkey t key =
   let open Pubkey in
   match key with
@@ -73,6 +80,24 @@ let write_pubkey t key =
     Wire.write_string t "ssh-rsa";
     Wire.write_mpint t e;
     Wire.write_mpint t n
+  | Ssh_rsa_cert { nonce; pubkey = { e; n }; serial; typ; key_id;
+                   valid_principals; valid_after; valid_before;
+                   critical_options; extensions; reserved; signature_key;
+                   signature } ->
+    Wire.write_string t nonce;
+    Wire.write_mpint t e;
+    Wire.write_mpint t n;
+    Wire.write_uint64 t serial;
+    Wire.write_uint32 t (Protocol_number.ssh_cert_type_to_int typ);
+    Wire.write_string t key_id;
+    Wire.write_name_list t valid_principals;
+    Wire.write_uint64 t valid_after;
+    Wire.write_uint64 t valid_before;
+    write_tuples t critical_options;
+    write_tuples t extensions;
+    Wire.write_string t reserved;
+    Wire.write_string t signature_key;
+    Wire.write_string t signature
   | Blob { key_type; key_blob } ->
     Wire.write_string t key_type;
     Faraday.write_string t key_blob

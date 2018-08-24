@@ -27,6 +27,21 @@ module Pubkey : sig
   type t =
     | Ssh_dss of ssh_dss
     | Ssh_rsa of ssh_rsa
+    | Ssh_rsa_cert of {
+        nonce : string;
+        pubkey : ssh_rsa;
+        serial : int64;
+        typ : Protocol_number.ssh_cert_type;
+        key_id : string;
+        valid_principals : string list;
+        valid_after : int64;
+        valid_before : int64;
+        critical_options : (string * string) list;
+        extensions : (string * string) list;
+        reserved : string;
+        signature_key : string;
+        signature : string;
+      }
     | Blob of {
         key_type : string;
         key_blob : string;
