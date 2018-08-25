@@ -70,6 +70,10 @@ let string_tuple =
   Wire.string >>= fun data ->
   return (name, data)
 
+let pub_blob key_type =
+  Angstrom.(take_while (fun _ -> true) >>= fun key_blob ->
+            return @@ Pubkey.Blob { key_type; key_blob; })
+
 let pub_ssh_rsa_cert =
   let open Angstrom in
   Wire.string >>= fun nonce ->
@@ -78,14 +82,14 @@ let pub_ssh_rsa_cert =
   Wire.uint64 >>= fun serial ->
   Wire.uint32 >>= fun typ ->
   match Protocol_number.int_to_ssh_cert_type typ with
-  | None -> Angstrom.fail "Unknown ssh cert type"
+  | None -> Angstrom.fail ("Unknown ssh cert type " ^ Int32.to_string typ)
   | Some typ ->
     Wire.string >>= fun key_id ->
-    Wire.name_list >>= fun valid_principals ->
+    parse_lift Wire.string (many Wire.string) >>= fun valid_principals ->
     Wire.uint64 >>= fun valid_before ->
     Wire.uint64 >>= fun valid_after ->
-    parse_lift Wire.string (Angstrom.many string_tuple) >>= fun critical_options ->
-    parse_lift Wire.string (Angstrom.many string_tuple) >>= fun extensions ->
+    parse_lift Wire.string (many string_tuple) >>= fun critical_options ->
+    parse_lift Wire.string (many string_tuple) >>= fun extensions ->
     Wire.string >>= fun reserved ->
     Wire.string >>= fun signature_key ->
     Wire.string >>= fun signature ->
@@ -104,10 +108,6 @@ let pub_ssh_rsa_cert =
         signature_key;
         signature;
       }
-
-let pub_blob key_type =
-  Angstrom.(take_while (fun _ -> true) >>= fun key_blob ->
-            return @@ Pubkey.Blob { key_type; key_blob; })
 
 let pubkey =
   let open Angstrom in
@@ -144,13 +144,18 @@ let ssh_rsa =
 
 let ssh_rsa_cert =
   let open Angstrom in
-  pub_ssh_rsa_cert >>= fun pubkey ->
+  parse_lift Wire.string (
+    Wire.string >>= function
+    | "ssh-rsa-cert-v01@openssh.com" ->
+      pub_ssh_rsa_cert
+    | _ as keytype -> fail ("Wrong pubkey type: " ^ String.escaped keytype))
+  >>= fun cert ->
   Wire.mpint >>= fun d ->
   Wire.mpint >>= fun iqmp ->
   Wire.mpint >>= fun p ->
   Wire.mpint >>= fun q ->
-  let e = failwith "TODO: fetch from pubkey" in
-  return (Privkey.Ssh_rsa_cert (Nocrypto.Rsa.priv_of_primes ~e ~p ~q, pubkey))
+  let e = cert.Pubkey.pubkey.e in
+  return (Privkey.Ssh_rsa_cert (Nocrypto.Rsa.priv_of_primes ~e ~p ~q, cert))
 
 let blob key_type =
   let open Angstrom in

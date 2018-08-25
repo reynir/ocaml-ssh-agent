@@ -22,9 +22,7 @@ module Pubkey = struct
     signature_key : string;
     signature : string;
   }
-  [@@deriving sexp_of]
-
-  type t =
+  and t =
     | Ssh_dss of ssh_dss
     | Ssh_rsa of ssh_rsa
     | Ssh_rsa_cert of ssh_rsa_cert
