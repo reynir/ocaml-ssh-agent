@@ -1,3 +1,40 @@
+module Pubkey : sig
+  type ssh_dss = Nocrypto.Dsa.pub
+  [@@deriving sexp_of]
+
+  type ssh_rsa = Nocrypto.Rsa.pub
+  [@@deriving sexp_of]
+
+  type ssh_rsa_cert = {
+    nonce : string;
+    pubkey : ssh_rsa;
+    serial : int64;
+    typ : Protocol_number.ssh_cert_type;
+    key_id : string;
+    valid_principals : string list;
+    valid_after : int64;
+    valid_before : int64;
+    critical_options : (string * string) list;
+    extensions : (string * string) list;
+    reserved : string;
+    signature_key : string;
+    signature : string;
+  }
+  [@@deriving sexp_of]
+
+  type t =
+    | Ssh_dss of ssh_dss
+    | Ssh_rsa of ssh_rsa
+    | Ssh_rsa_cert of ssh_rsa_cert
+    | Blob of {
+        key_type : string;
+        key_blob : string;
+      }
+    (** [Blob] is an unknown ssh wire string-unwrapped public key of type
+     * [key_type]. *)
+  [@@deriving sexp_of]
+end
+
 module Privkey : sig
   type ssh_dss = Nocrypto.Dsa.priv
   [@@deriving sexp_of]
@@ -8,45 +45,12 @@ module Privkey : sig
   type t =
     | Ssh_dss of ssh_dss
     | Ssh_rsa of ssh_rsa
+    | Ssh_rsa_cert of ssh_rsa * Pubkey.ssh_rsa_cert
     | Blob of {
         key_type : string;
         key_blob : string;
       }
     (** [Blob] is an unknown ssh wire string-unwrapped private key of type
-     * [key_type]. *)
-  [@@deriving sexp_of]
-end
-
-module Pubkey : sig
-  type ssh_dss = Nocrypto.Dsa.pub
-  [@@deriving sexp_of]
-
-  type ssh_rsa = Nocrypto.Rsa.pub
-  [@@deriving sexp_of]
-
-  type t =
-    | Ssh_dss of ssh_dss
-    | Ssh_rsa of ssh_rsa
-    | Ssh_rsa_cert of {
-        nonce : string;
-        pubkey : ssh_rsa;
-        serial : int64;
-        typ : Protocol_number.ssh_cert_type;
-        key_id : string;
-        valid_principals : string list;
-        valid_after : int64;
-        valid_before : int64;
-        critical_options : (string * string) list;
-        extensions : (string * string) list;
-        reserved : string;
-        signature_key : string;
-        signature : string;
-      }
-    | Blob of {
-        key_type : string;
-        key_blob : string;
-      }
-    (** [Blob] is an unknown ssh wire string-unwrapped public key of type
      * [key_type]. *)
   [@@deriving sexp_of]
 end

@@ -50,41 +50,6 @@ let parse_lift p1 p2 =
   | Ok a -> Angstrom.return a
   | Error e -> Angstrom.fail e
 
-let ssh_dss =
-  let open Angstrom in
-  Wire.mpint >>= fun p ->
-  Wire.mpint >>= fun q ->
-  Wire.mpint >>= fun gg ->
-  Wire.mpint >>= fun y ->
-  Wire.mpint >>= fun x ->
-  return (Privkey.Ssh_dss { p; q; gg; y; x })
-
-let ssh_rsa =
-  let open Angstrom in
-  Wire.mpint >>= fun n ->
-  Wire.mpint >>= fun e ->
-  Wire.mpint >>= fun d ->
-  Wire.mpint >>= fun iqmp ->
-  Wire.mpint >>= fun p ->
-  Wire.mpint >>= fun q ->
-  (* FIXME: How do the parameters correspond to Nocrypto.Rsa.priv ? *)
-  return (Privkey.Ssh_rsa (Nocrypto.Rsa.priv_of_primes ~e ~p ~q))
-
-let blob key_type =
-  let open Angstrom in
-  take_while (fun _ -> true) >>= fun key_blob ->
-  return (Privkey.Blob { key_type; key_blob })
-
-let privkey =
-  let open Angstrom in
-  Wire.string >>= function
-  | "ssh-dss" ->
-    ssh_dss
-  | "ssh-rsa" ->
-    ssh_rsa
-  | key_type ->
-    blob key_type
-
 let pub_ssh_dss =
   let open Angstrom in
   Wire.mpint >>= fun p ->
@@ -124,8 +89,8 @@ let pub_ssh_rsa_cert =
     Wire.string >>= fun reserved ->
     Wire.string >>= fun signature_key ->
     Wire.string >>= fun signature ->
-    return (Pubkey.Ssh_rsa_cert {
-        nonce;
+    return {
+        Pubkey.nonce;
         pubkey = { e; n };
         serial;
         typ;
@@ -138,7 +103,7 @@ let pub_ssh_rsa_cert =
         reserved;
         signature_key;
         signature;
-      })
+      }
 
 let pub_blob key_type =
   Angstrom.(take_while (fun _ -> true) >>= fun key_blob ->
@@ -151,10 +116,58 @@ let pubkey =
     pub_ssh_dss
   | "ssh-rsa" ->
     pub_ssh_rsa
-  | "ssh-rsa-cert-v01@openssh.com" as key_type ->
-    pub_blob key_type
+  | "ssh-rsa-cert-v01@openssh.com" ->
+    pub_ssh_rsa_cert >>= fun ssh_rsa_cert ->
+    return (Pubkey.Ssh_rsa_cert ssh_rsa_cert)
   | key_type ->
     pub_blob key_type
+
+let ssh_dss =
+  let open Angstrom in
+  Wire.mpint >>= fun p ->
+  Wire.mpint >>= fun q ->
+  Wire.mpint >>= fun gg ->
+  Wire.mpint >>= fun y ->
+  Wire.mpint >>= fun x ->
+  return (Privkey.Ssh_dss { p; q; gg; y; x })
+
+let ssh_rsa =
+  let open Angstrom in
+  Wire.mpint >>= fun n ->
+  Wire.mpint >>= fun e ->
+  Wire.mpint >>= fun d ->
+  Wire.mpint >>= fun iqmp ->
+  Wire.mpint >>= fun p ->
+  Wire.mpint >>= fun q ->
+  (* FIXME: How do the parameters correspond to Nocrypto.Rsa.priv ? *)
+  return (Privkey.Ssh_rsa (Nocrypto.Rsa.priv_of_primes ~e ~p ~q))
+
+let ssh_rsa_cert =
+  let open Angstrom in
+  pub_ssh_rsa_cert >>= fun pubkey ->
+  Wire.mpint >>= fun d ->
+  Wire.mpint >>= fun iqmp ->
+  Wire.mpint >>= fun p ->
+  Wire.mpint >>= fun q ->
+  let e = failwith "TODO: fetch from pubkey" in
+  return (Privkey.Ssh_rsa_cert (Nocrypto.Rsa.priv_of_primes ~e ~p ~q, pubkey))
+
+let blob key_type =
+  let open Angstrom in
+  take_while (fun _ -> true) >>= fun key_blob ->
+  return (Privkey.Blob { key_type; key_blob })
+
+let privkey =
+  let open Angstrom in
+  Wire.string >>= function
+  | "ssh-dss" ->
+    ssh_dss
+  | "ssh-rsa" ->
+    ssh_rsa
+  | "ssh-rsa-cert-v01@openssh.com" ->
+    ssh_rsa_cert
+  | key_type ->
+    blob key_type
 
 
 let comment = Wire.string
