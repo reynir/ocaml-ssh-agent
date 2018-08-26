@@ -7,6 +7,9 @@ module Pubkey = struct
   type ssh_rsa = Nocrypto.Rsa.pub
   [@@deriving sexp_of]
 
+  type options = (string * string) list
+  [@@deriving sexp_of]
+
   type ssh_rsa_cert = {
     nonce : string;
     pubkey : ssh_rsa;
@@ -16,8 +19,8 @@ module Pubkey = struct
     valid_principals : string list;
     valid_after : int64;
     valid_before : int64;
-    critical_options : (string * string) list;
-    extensions : (string * string) list;
+    critical_options : options;
+    extensions : options;
     reserved : string;
     signature_key : string;
     signature : string;
