@@ -14,7 +14,7 @@ module Pubkey : sig
    * The data seems to be always encoded as a ssh wire string inside this
    * string. The empty string would thus be "no data". *)
 
-  type ssh_rsa_cert = {
+  type ssh_rsa_cert_tbs = {
     nonce : string;
     (** CA-provided random bitstring. *)
     pubkey : ssh_rsa;
@@ -44,6 +44,11 @@ module Pubkey : sig
     (** [reserved] is always empty currently according to the specification *)
     signature_key : string;
     (** Unparsed public key used for signing the signature *)
+  }
+  [@@deriving sexp_of]
+  type ssh_rsa_cert = {
+    to_be_signed : ssh_rsa_cert_tbs;
+    (** The data that is signed *)
     signature : string;
     (** Signature of the serialized other fields *)
   }

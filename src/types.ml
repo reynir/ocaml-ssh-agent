@@ -10,7 +10,7 @@ module Pubkey = struct
   type options = (string * string) list
   [@@deriving sexp_of]
 
-  type ssh_rsa_cert = {
+  type ssh_rsa_cert_tbs = {
     nonce : string;
     pubkey : ssh_rsa;
     serial : int64;
@@ -23,6 +23,10 @@ module Pubkey = struct
     extensions : options;
     reserved : string;
     signature_key : string;
+  }
+  [@@deriving sexp_of]
+  type ssh_rsa_cert = {
+    to_be_signed : ssh_rsa_cert_tbs;
     signature : string;
   }
   and t =

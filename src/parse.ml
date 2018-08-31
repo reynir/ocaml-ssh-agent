@@ -94,6 +94,7 @@ let pub_ssh_rsa_cert =
     Wire.string >>= fun signature_key ->
     Wire.string >>= fun signature ->
     return {
+      Pubkey.to_be_signed = {
         Pubkey.nonce;
         pubkey = { e; n };
         serial;
@@ -106,8 +107,9 @@ let pub_ssh_rsa_cert =
         extensions;
         reserved;
         signature_key;
-        signature;
-      }
+      };
+      signature;
+    }
 
 let pubkey =
   let open Angstrom in
@@ -154,7 +156,7 @@ let ssh_rsa_cert =
   Wire.mpint >>= fun iqmp ->
   Wire.mpint >>= fun p ->
   Wire.mpint >>= fun q ->
-  let e = cert.Pubkey.pubkey.e in
+  let e = cert.Pubkey.to_be_signed.Pubkey.pubkey.e in
   return (Privkey.Ssh_rsa_cert (Nocrypto.Rsa.priv_of_primes ~e ~p ~q, cert))
 
 let blob key_type =
