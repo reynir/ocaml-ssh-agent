@@ -76,3 +76,6 @@ let sign priv (sign_flags : Protocol_number.sign_flag list) blob =
   | Privkey.Ssh_dss _
   | Privkey.Blob _ ->
     failwith "Not implemented :-("
+
+let string_of_tbs tbs =
+  Serialize.with_faraday (fun t -> Serialize.write_ssh_rsa_cert_tbs t tbs)

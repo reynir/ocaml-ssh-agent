@@ -218,3 +218,8 @@ val unpack_any_response
  * respecting the hashing algorithms specified by [flags]. Currently, only RSA
  * signatures are supported. *)
 val sign : Privkey.t -> Protocol_number.sign_flag list -> string -> string
+
+(** [string_of_tbs to_be_signed] is the string representation of [to_be_signed]
+ * that must be signed by [to_be_signed.Pubkey.signature_key] in order to
+ * create a valid certificate. *)
+val string_of_tbs : Pubkey.ssh_rsa_cert_tbs -> string
