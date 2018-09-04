@@ -74,7 +74,7 @@ let pub_blob key_type =
   Angstrom.(take_while (fun _ -> true) >>= fun key_blob ->
             return @@ Pubkey.Blob { key_type; key_blob; })
 
-let pub_ssh_rsa_cert =
+let rec pub_ssh_rsa_cert () =
   let open Angstrom in
   Wire.string >>= fun nonce ->
   Wire.mpint >>= fun e ->
@@ -91,7 +91,7 @@ let pub_ssh_rsa_cert =
     parse_lift Wire.string (many string_tuple) >>= fun critical_options ->
     parse_lift Wire.string (many string_tuple) >>= fun extensions ->
     Wire.string >>= fun reserved ->
-    Wire.string >>= fun signature_key ->
+    pubkey false >>= fun signature_key ->
     Wire.string >>= fun signature ->
     return {
       Pubkey.to_be_signed = {
@@ -111,7 +111,7 @@ let pub_ssh_rsa_cert =
       signature;
     }
 
-let pubkey =
+and pubkey can_be_cert =
   let open Angstrom in
   Wire.string >>= function
   | "ssh-dss" ->
@@ -119,8 +119,11 @@ let pubkey =
   | "ssh-rsa" ->
     pub_ssh_rsa
   | "ssh-rsa-cert-v01@openssh.com" ->
-    pub_ssh_rsa_cert >>= fun ssh_rsa_cert ->
-    return (Pubkey.Ssh_rsa_cert ssh_rsa_cert)
+    if can_be_cert
+    then
+      pub_ssh_rsa_cert () >>= fun ssh_rsa_cert ->
+      return (Pubkey.Ssh_rsa_cert ssh_rsa_cert)
+    else fail "ssh-rsa-cert-v01@openssh.com where certificates are disallowed"
   | key_type ->
     pub_blob key_type
 
@@ -149,7 +152,7 @@ let ssh_rsa_cert =
   parse_lift Wire.string (
     Wire.string >>= function
     | "ssh-rsa-cert-v01@openssh.com" ->
-      pub_ssh_rsa_cert
+      pub_ssh_rsa_cert ()
     | _ as keytype -> fail ("Wrong pubkey type: " ^ String.escaped keytype))
   >>= fun cert ->
   Wire.mpint >>= fun d ->
@@ -181,7 +184,7 @@ let comment = Wire.string
 
 let id_entry =
   let open Angstrom in
-  parse_lift Wire.string pubkey >>= fun pubkey ->
+  parse_lift Wire.string (pubkey true) >>= fun pubkey ->
   Wire.string >>= fun comment ->
   return { pubkey; comment }
 
@@ -244,7 +247,7 @@ let ssh_agent_message ~extension =
 
 let ssh_agentc_sign_request =
   let open Angstrom in
-  parse_lift Wire.string pubkey >>= fun pubkey ->
+  parse_lift Wire.string (pubkey true) >>= fun pubkey ->
   Wire.string >>= fun data ->
   Wire.uint32 >>= fun mask ->
   let flags = Protocol_number.mask_to_sign_flags (Int32.to_int mask) in
@@ -275,7 +278,7 @@ let ssh_agentc_add_id_constrained =
 
 let ssh_agentc_remove_identity =
   let open Angstrom in
-  parse_lift Wire.string pubkey >>= fun pubkey ->
+  parse_lift Wire.string (pubkey true) >>= fun pubkey ->
   return (Ssh_agentc_remove_identity pubkey)
 
 let ssh_agentc_add_smartcard_key =

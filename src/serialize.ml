@@ -45,7 +45,7 @@ let write_tuples t tuples =
   List.iter (write_tuple t) tuples
 
 
-let write_ssh_rsa_cert_tbs t
+let rec write_ssh_rsa_cert_tbs t
     { Pubkey.nonce; pubkey = { e; n }; serial; typ; key_id;
       valid_principals; valid_after; valid_before;
       critical_options; extensions; reserved; signature_key; }
@@ -63,10 +63,9 @@ let write_ssh_rsa_cert_tbs t
   Wire.write_string t (with_faraday (fun t -> write_tuples t critical_options));
   Wire.write_string t (with_faraday (fun t -> write_tuples t extensions));
   Wire.write_string t reserved;
-  Wire.write_string t signature_key
+  write_pubkey t signature_key
 
-
-let write_pubkey t key =
+and write_pubkey t key =
   let open Pubkey in
   match key with
   | Ssh_dss { p; q; gg; y } ->

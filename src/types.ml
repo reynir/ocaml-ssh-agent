@@ -22,10 +22,9 @@ module Pubkey = struct
     critical_options : options;
     extensions : options;
     reserved : string;
-    signature_key : string;
+    signature_key : t;
   }
-  [@@deriving sexp_of]
-  type ssh_rsa_cert = {
+  and ssh_rsa_cert = {
     to_be_signed : ssh_rsa_cert_tbs;
     signature : string;
   }
