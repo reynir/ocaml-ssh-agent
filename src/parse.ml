@@ -91,7 +91,7 @@ let rec pub_ssh_rsa_cert () =
     parse_lift Wire.string (many string_tuple) >>= fun critical_options ->
     parse_lift Wire.string (many string_tuple) >>= fun extensions ->
     Wire.string >>= fun reserved ->
-    pubkey false >>= fun signature_key ->
+    parse_lift Wire.string (pubkey false) >>= fun signature_key ->
     Wire.string >>= fun signature ->
     return {
       Pubkey.to_be_signed = {

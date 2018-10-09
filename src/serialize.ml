@@ -63,7 +63,7 @@ let rec write_ssh_rsa_cert_tbs t
   Wire.write_string t (with_faraday (fun t -> write_tuples t critical_options));
   Wire.write_string t (with_faraday (fun t -> write_tuples t extensions));
   Wire.write_string t reserved;
-  write_pubkey t signature_key
+  Wire.write_string t (with_faraday (fun t -> write_pubkey t signature_key))
 
 and write_pubkey t key =
   let open Pubkey in
