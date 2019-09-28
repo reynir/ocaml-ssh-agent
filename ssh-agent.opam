@@ -6,9 +6,9 @@ dev-repo: "https://github.com/reynir/ocaml-ssh-agent.git"
 homepage: "https://github.com/reynir/ocaml-ssh-agent/"
 bug-reports: "https://github.com/reynir/ocaml-ssh-agent/issues/"
 license: "BSD-2-clause"
-build: ["jbuilder" "build" "-p" name]
+build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
-  "jbuilder" {build}
+  "dune" {build & >= "1.0"}
   "ppx_cstruct" {build}
   "ppx_sexp_conv"
   "angstrom" {>= "0.10" & < "0.11"}
