@@ -95,7 +95,7 @@ let write_privkey t key =
     Wire.write_mpint t gg;
     Wire.write_mpint t y;
     Wire.write_mpint t x
-  | Ssh_rsa { e; d; n; p; q; dp; dq; q' } ->
+  | Ssh_rsa { e; d; n; p; q; dp=_; dq=_; q' } ->
     (* iqmp (inverse of q modulo p) is q' *)
     Wire.write_string t "ssh-rsa";
     Wire.write_mpint t n;
@@ -104,7 +104,7 @@ let write_privkey t key =
     Wire.write_mpint t q';
     Wire.write_mpint t p;
     Wire.write_mpint t q
-  | Ssh_rsa_cert ({ e; d; n; p; q; dp; dq; q' },
+  | Ssh_rsa_cert ({ e=_; d; n=_; p; q; dp=_; dq=_; q' },
                   pubkey) ->
     Wire.write_string t "ssh-rsa-cert-v01@openssh.com";
     Wire.write_string t (with_faraday (fun t -> write_pubkey t (Pubkey.Ssh_rsa_cert pubkey)));

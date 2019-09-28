@@ -138,10 +138,10 @@ let ssh_dss =
 
 let ssh_rsa =
   let open Angstrom in
-  Wire.mpint >>= fun n ->
+  Wire.mpint >>= fun _n ->
   Wire.mpint >>= fun e ->
-  Wire.mpint >>= fun d ->
-  Wire.mpint >>= fun iqmp ->
+  Wire.mpint >>= fun _d ->
+  Wire.mpint >>= fun _iqmp ->
   Wire.mpint >>= fun p ->
   Wire.mpint >>= fun q ->
   (* FIXME: How do the parameters correspond to Nocrypto.Rsa.priv ? *)
@@ -155,8 +155,8 @@ let ssh_rsa_cert =
       pub_ssh_rsa_cert ()
     | _ as keytype -> fail ("Wrong pubkey type: " ^ String.escaped keytype))
   >>= fun cert ->
-  Wire.mpint >>= fun d ->
-  Wire.mpint >>= fun iqmp ->
+  Wire.mpint >>= fun _d ->
+  Wire.mpint >>= fun _iqmp ->
   Wire.mpint >>= fun p ->
   Wire.mpint >>= fun q ->
   let e = cert.Pubkey.to_be_signed.Pubkey.pubkey.e in
