@@ -11,8 +11,8 @@ depends: [
   "dune" {build & >= "1.0"}
   "ppx_cstruct" {build}
   "ppx_sexp_conv"
-  "angstrom" {>= "0.10" & < "0.11"}
-  "faraday" {>= "0.6" & < "0.7"}
+  "angstrom" {>= "0.10" & < "0.13"}
+  "faraday" {>= "0.6" & < "0.8"}
   "nocrypto"
   "cstruct"
   "alcotest" {test}
