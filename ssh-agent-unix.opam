@@ -8,7 +8,8 @@ bug-reports: "https://github.com/reynir/ocaml-ssh-agent/issues/"
 license: "BSD-2-clause"
 build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
-  "ssh-agent"
+  "dune" {build & >= "1.0"}
+  "ssh-agent" {= version}
   "angstrom-unix"
   "faraday"
 ]
