@@ -1,13 +1,15 @@
-opam-version: "1.2"
+opam-version: "2.0"
+synopsis: "Ssh-agent protocol parser and serialization implementation"
 maintainer: "Reynir Björnsson <reynir@reynir.dk>"
 author: "Reynir Björnsson <reynir@reynir.dk>"
 synopsis: "Parsers and serializers for the ssh-agent protocol"
-dev-repo: "https://github.com/reynir/ocaml-ssh-agent.git"
+dev-repo: "git://github.com/reynir/ocaml-ssh-agent.git"
 homepage: "https://github.com/reynir/ocaml-ssh-agent/"
 bug-reports: "https://github.com/reynir/ocaml-ssh-agent/issues/"
 license: "BSD-2-clause"
 build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
+  "ocaml" {>= "4.04.0"}
   "dune" {>= "1.0"}
   "ppx_cstruct" {build}
   "ppx_sexp_conv"
@@ -15,7 +17,6 @@ depends: [
   "faraday" {>= "0.6" & < "0.8"}
   "nocrypto"
   "cstruct"
-  "alcotest" {test}
-  "sexplib" {test}
+  "alcotest" {with-test}
+  "sexplib" {with-test}
 ]
-available: [ ocaml-version >= "4.04.0" ]
