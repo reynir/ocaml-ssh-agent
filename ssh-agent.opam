@@ -7,7 +7,10 @@ dev-repo: "git://github.com/reynir/ocaml-ssh-agent.git"
 homepage: "https://github.com/reynir/ocaml-ssh-agent/"
 bug-reports: "https://github.com/reynir/ocaml-ssh-agent/issues/"
 license: "BSD-2-clause"
-build: ["dune" "build" "-p" name "-j" jobs]
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
 depends: [
   "ocaml" {>= "4.04.0"}
   "dune" {>= "1.0"}
