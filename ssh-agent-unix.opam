@@ -9,6 +9,6 @@ license: "BSD-2-clause"
 build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
   "ssh-agent"
-  "angstrom"
+  "angstrom-unix"
   "faraday"
 ]
