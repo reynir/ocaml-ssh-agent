@@ -29,7 +29,7 @@ module Wire = struct
     then return Z.zero
     else take (Int32.to_int mpint_len)
       >>= fun mpint ->
-      return (Nocrypto.Numeric.Z.of_cstruct_be (Cstruct.of_string mpint))
+      return (Mirage_crypto_pk.Z_extra.of_cstruct_be (Cstruct.of_string mpint))
 
   let name_list =
     string >>|
@@ -56,13 +56,21 @@ let pub_ssh_dss =
   Wire.mpint >>= fun q ->
   Wire.mpint >>= fun gg ->
   Wire.mpint >>= fun y ->
-  return (Pubkey.Ssh_dss { p; q; gg; y })
+  match Mirage_crypto_pk.Dsa.pub ~p ~q ~gg ~y () with
+  | Error (`Msg e) ->
+    Angstrom.fail ("Mirage_crypto_pk.Dsa.pub: " ^ e)
+  | Ok pub ->
+    return pub
 
 let pub_ssh_rsa =
   let open Angstrom in
   Wire.mpint >>= fun e ->
   Wire.mpint >>= fun n ->
-  return (Pubkey.Ssh_rsa { e; n })
+  match Mirage_crypto_pk.Rsa.pub ~e ~n with
+  | Error (`Msg e) ->
+    Angstrom.fail ("Mirage_crypto_pk.Rsa.pub: " ^ e)
+  | Ok pub ->
+    return pub
 
 let string_tuple =
   let open Angstrom in
@@ -77,8 +85,7 @@ let pub_blob key_type =
 let rec pub_ssh_rsa_cert () =
   let open Angstrom in
   Wire.string >>= fun nonce ->
-  Wire.mpint >>= fun e ->
-  Wire.mpint >>= fun n ->
+  pub_ssh_rsa >>= fun pubkey_to_be_signed ->
   Wire.uint64 >>= fun serial ->
   Wire.uint32 >>= fun typ ->
   match Protocol_number.int_to_ssh_cert_type typ with
@@ -96,7 +103,7 @@ let rec pub_ssh_rsa_cert () =
     return {
       Pubkey.to_be_signed = {
         Pubkey.nonce;
-        pubkey = { e; n };
+        pubkey = pubkey_to_be_signed;
         serial;
         typ;
         key_id;
@@ -115,9 +122,11 @@ and pubkey can_be_cert =
   let open Angstrom in
   Wire.string >>= function
   | "ssh-dss" ->
-    pub_ssh_dss
+    pub_ssh_dss >>= fun pubkey ->
+    return (Pubkey.Ssh_dss pubkey)
   | "ssh-rsa" ->
-    pub_ssh_rsa
+    pub_ssh_rsa >>= fun pubkey ->
+    return (Pubkey.Ssh_rsa pubkey)
   | "ssh-rsa-cert-v01@openssh.com" ->
     if can_be_cert
     then
@@ -134,7 +143,11 @@ let ssh_dss =
   Wire.mpint >>= fun gg ->
   Wire.mpint >>= fun y ->
   Wire.mpint >>= fun x ->
-  return (Privkey.Ssh_dss { p; q; gg; y; x })
+  match Mirage_crypto_pk.Dsa.priv ~p ~q ~gg ~y ~x () with
+  | Error (`Msg e) ->
+    fail ("Mirage_crypto_pk.Dsa.priv: " ^ e)
+  | Ok priv ->
+    return priv
 
 let ssh_rsa =
   let open Angstrom in
@@ -144,8 +157,12 @@ let ssh_rsa =
   Wire.mpint >>= fun _iqmp ->
   Wire.mpint >>= fun p ->
   Wire.mpint >>= fun q ->
-  (* FIXME: How do the parameters correspond to Nocrypto.Rsa.priv ? *)
-  return (Privkey.Ssh_rsa (Nocrypto.Rsa.priv_of_primes ~e ~p ~q))
+  (* FIXME: How do the parameters correspond to Mirage_crypto_pk.Rsa.priv ? *)
+  match Mirage_crypto_pk.Rsa.priv_of_primes ~e ~p ~q with
+  | Error (`Msg e) ->
+    fail ("Mirage_crypto_pk.Rsa.priv_of_primes: " ^ e)
+  | Ok priv ->
+    return priv
 
 let ssh_rsa_cert =
   let open Angstrom in
@@ -160,7 +177,11 @@ let ssh_rsa_cert =
   Wire.mpint >>= fun p ->
   Wire.mpint >>= fun q ->
   let e = cert.Pubkey.to_be_signed.Pubkey.pubkey.e in
-  return (Privkey.Ssh_rsa_cert (Nocrypto.Rsa.priv_of_primes ~e ~p ~q, cert))
+  match Mirage_crypto_pk.Rsa.priv_of_primes ~e ~p ~q with
+  | Error (`Msg e) ->
+    fail ("Mirage_crypto_pk.Rsa.priv_of_primes: " ^ e)
+  | Ok priv ->
+    return (priv, cert)
 
 let blob key_type =
   let open Angstrom in
@@ -171,11 +192,14 @@ let privkey =
   let open Angstrom in
   Wire.string >>= function
   | "ssh-dss" ->
-    ssh_dss
+    ssh_dss >>= fun priv ->
+    return (Privkey.Ssh_dss priv)
   | "ssh-rsa" ->
-    ssh_rsa
+    ssh_rsa >>= fun priv ->
+    return (Privkey.Ssh_rsa priv)
   | "ssh-rsa-cert-v01@openssh.com" ->
-    ssh_rsa_cert
+    ssh_rsa_cert >>= fun (priv, cert) ->
+    return (Privkey.Ssh_rsa_cert (priv, cert))
   | key_type ->
     blob key_type
 

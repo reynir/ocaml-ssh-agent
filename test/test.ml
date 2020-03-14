@@ -92,9 +92,9 @@ let m_response = (module Response
                    : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_response)
 
 
-let () = Nocrypto_entropy_unix.initialize ()
-let privkey = Nocrypto.Rsa.generate 1024
-let pubkey = Nocrypto.Rsa.pub_of_priv privkey
+let () = Mirage_crypto_rng_unix.initialize ()
+let privkey = Mirage_crypto_pk.Rsa.generate ~bits:1024 ()
+let pubkey = Mirage_crypto_pk.Rsa.pub_of_priv privkey
 let privkey = Ssh_agent.Privkey.Ssh_rsa privkey
 let pubkey = Ssh_agent.Pubkey.Ssh_rsa pubkey
 

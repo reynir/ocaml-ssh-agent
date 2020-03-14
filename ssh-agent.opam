@@ -17,8 +17,9 @@ depends: [
   "ppx_sexp_conv"
   "angstrom" {>= "0.10" & < "0.13"}
   "faraday" {>= "0.6" & < "0.8"}
-  "nocrypto"
+  "mirage-crypto"
+  "mirage-crypto-pk"
   "cstruct"
+  "sexplib"
   "alcotest" {with-test}
-  "sexplib" {with-test}
 ]

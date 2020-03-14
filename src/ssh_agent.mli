@@ -1,8 +1,8 @@
 module Pubkey : sig
-  type ssh_dss = Nocrypto.Dsa.pub
+  type ssh_dss = Mirage_crypto_pk.Dsa.pub
   [@@deriving sexp_of]
 
-  type ssh_rsa = Nocrypto.Rsa.pub
+  type ssh_rsa = Mirage_crypto_pk.Rsa.pub
   [@@deriving sexp_of]
 
   type options = (string * string) list
@@ -65,10 +65,10 @@ module Pubkey : sig
 end
 
 module Privkey : sig
-  type ssh_dss = Nocrypto.Dsa.priv
+  type ssh_dss = Mirage_crypto_pk.Dsa.priv
   [@@deriving sexp_of]
 
-  type ssh_rsa = Nocrypto.Rsa.priv
+  type ssh_rsa = Mirage_crypto_pk.Rsa.priv
   [@@deriving sexp_of]
 
   type t =

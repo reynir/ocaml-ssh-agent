@@ -21,7 +21,7 @@ module Wire = struct
     if mpint = Z.zero
     then write_uint32 t 0l
     else
-      let mpint = Nocrypto.Numeric.Z.to_cstruct_be mpint in
+      let mpint = Mirage_crypto_pk.Z_extra.to_cstruct_be mpint in
       let mpint_padded =
         if Cstruct.get_uint8 mpint 0 land 0x80 <> 0
         then Cstruct.append (Cstruct.of_string "\000") mpint

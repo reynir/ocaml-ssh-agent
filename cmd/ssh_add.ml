@@ -1,7 +1,7 @@
 
 
 let main bits key_comment =
-  let () = Nocrypto_entropy_unix.initialize () in
+  let () = Mirage_crypto_rng_unix.initialize () in
   let sock_path =
     match Sys.getenv "SSH_AUTH_SOCK" with
     | path -> path
@@ -10,7 +10,7 @@ let main bits key_comment =
   let () = Unix.connect fd Unix.(ADDR_UNIX sock_path) in
   let ic = Unix.in_channel_of_descr fd in
   let oc = Unix.out_channel_of_descr fd in
-  let privkey = Ssh_agent.Privkey.Ssh_rsa (Nocrypto.Rsa.generate bits) in
+  let privkey = Ssh_agent.Privkey.Ssh_rsa (Mirage_crypto_pk.Rsa.generate ~bits ()) in
   let req = Ssh_agent.Ssh_agentc_add_identity { privkey; key_comment } in
   match Ssh_agent_unix.request (ic, oc) req with
   | Ok Ssh_agent.Ssh_agent_success ->

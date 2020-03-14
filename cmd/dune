@@ -1,3 +1,3 @@
 (executable
  (name ssh_add)
- (libraries ssh-agent nocrypto nocrypto.unix ssh-agent-unix cmdliner))
+ (libraries ssh-agent mirage-crypto-pk mirage-crypto-rng.unix ssh-agent-unix cmdliner))

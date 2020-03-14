@@ -1,6 +1,6 @@
 (executable
  (name test)
- (libraries ssh-agent alcotest nocrypto.unix sexplib))
+ (libraries ssh-agent alcotest mirage-crypto-rng.unix sexplib))
 
 (alias
  (name runtest)
