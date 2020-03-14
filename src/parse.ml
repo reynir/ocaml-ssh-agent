@@ -50,27 +50,28 @@ let parse_lift p1 p2 =
   | Ok a -> Angstrom.return a
   | Error e -> Angstrom.fail e
 
+let angstrom_of_result source r =
+  match r with
+  | Error (`Msg e) ->
+    Angstrom.fail (source ^ ": " ^ e)
+  | Ok v ->
+    Angstrom.return v
+
 let pub_ssh_dss =
   let open Angstrom in
   Wire.mpint >>= fun p ->
   Wire.mpint >>= fun q ->
   Wire.mpint >>= fun gg ->
   Wire.mpint >>= fun y ->
-  match Mirage_crypto_pk.Dsa.pub ~p ~q ~gg ~y () with
-  | Error (`Msg e) ->
-    Angstrom.fail ("Mirage_crypto_pk.Dsa.pub: " ^ e)
-  | Ok pub ->
-    return pub
+  Mirage_crypto_pk.Dsa.pub ~p ~q ~gg ~y ()
+  |> angstrom_of_result "Mirage_crypto_pk.Dsa.pub"
 
 let pub_ssh_rsa =
   let open Angstrom in
   Wire.mpint >>= fun e ->
   Wire.mpint >>= fun n ->
-  match Mirage_crypto_pk.Rsa.pub ~e ~n with
-  | Error (`Msg e) ->
-    Angstrom.fail ("Mirage_crypto_pk.Rsa.pub: " ^ e)
-  | Ok pub ->
-    return pub
+  Mirage_crypto_pk.Rsa.pub ~e ~n
+  |> angstrom_of_result "Mirage_crypto_pk.Rsa.pub"
 
 let string_tuple =
   let open Angstrom in
@@ -143,11 +144,8 @@ let ssh_dss =
   Wire.mpint >>= fun gg ->
   Wire.mpint >>= fun y ->
   Wire.mpint >>= fun x ->
-  match Mirage_crypto_pk.Dsa.priv ~p ~q ~gg ~y ~x () with
-  | Error (`Msg e) ->
-    fail ("Mirage_crypto_pk.Dsa.priv: " ^ e)
-  | Ok priv ->
-    return priv
+  Mirage_crypto_pk.Dsa.priv ~p ~q ~gg ~y ~x ()
+  |> angstrom_of_result "Mirage_crypto_pk.Dsa.priv"
 
 let ssh_rsa =
   let open Angstrom in
@@ -158,11 +156,8 @@ let ssh_rsa =
   Wire.mpint >>= fun p ->
   Wire.mpint >>= fun q ->
   (* FIXME: How do the parameters correspond to Mirage_crypto_pk.Rsa.priv ? *)
-  match Mirage_crypto_pk.Rsa.priv_of_primes ~e ~p ~q with
-  | Error (`Msg e) ->
-    fail ("Mirage_crypto_pk.Rsa.priv_of_primes: " ^ e)
-  | Ok priv ->
-    return priv
+  Mirage_crypto_pk.Rsa.priv_of_primes ~e ~p ~q
+  |> angstrom_of_result "Mirage_crypto_pk.Rsa.priv_of_primes"
 
 let ssh_rsa_cert =
   let open Angstrom in
@@ -177,11 +172,10 @@ let ssh_rsa_cert =
   Wire.mpint >>= fun p ->
   Wire.mpint >>= fun q ->
   let e = cert.Pubkey.to_be_signed.Pubkey.pubkey.e in
-  match Mirage_crypto_pk.Rsa.priv_of_primes ~e ~p ~q with
-  | Error (`Msg e) ->
-    fail ("Mirage_crypto_pk.Rsa.priv_of_primes: " ^ e)
-  | Ok priv ->
-    return (priv, cert)
+  Mirage_crypto_pk.Rsa.priv_of_primes ~e ~p ~q
+  |>  angstrom_of_result "Mirage_crypto_pk.Rsa.priv_of_primes"
+  >>= fun priv ->
+  return (priv, cert)
 
 let blob key_type =
   let open Angstrom in
