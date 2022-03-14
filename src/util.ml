@@ -29,6 +29,3 @@ let id_sha512 = [|
   0x05; 0x00; (* NULL *)
   0x04; 0x40  (* Octet string, length 0x40 (64), followed by sha512 hash *)
 |] |> cstruct_of_array
-
-let cstruct_is_prefix prefix other =
-  Cstruct.equal prefix (Cstruct.sub other 0 (Cstruct.len prefix))
