@@ -102,7 +102,8 @@ let serialize_parse s request =
   Alcotest.(check m_request) s (Ssh_agent.Any_request request)
     (let r = with_faraday (fun t ->
          Ssh_agent.Serialize.write_ssh_agent_request t request) in
-     match Angstrom.parse_string Ssh_agent.Parse.ssh_agentc_message r with
+     match Angstrom.parse_string ~consume:Angstrom.Consume.All
+             Ssh_agent.Parse.ssh_agentc_message r with
      | Result.Ok req -> req
      | Result.Error e -> failwith e)
 
@@ -171,7 +172,7 @@ let serialize_parse_response s (response : 'a Ssh_agent.ssh_agent_response) =
   Alcotest.(check m_response) s (Ssh_agent.Any_response response)
     (let r = with_faraday (fun t ->
          Ssh_agent.Serialize.write_ssh_agent_response t response) in
-     match Angstrom.parse_string
+     match Angstrom.parse_string ~consume:Angstrom.Consume.All
              (Ssh_agent.Parse.ssh_agent_message ~extension)
              r with
      | Result.Ok req -> req
