@@ -46,7 +46,7 @@ let count32 n =
 let parse_lift p1 p2 =
   let open Angstrom in
   p1 >>= fun s ->
-  match parse_string p2 s with
+  match parse_string ~consume:Consume.All p2 s with
   | Ok a -> Angstrom.return a
   | Error e -> Angstrom.fail e
 
