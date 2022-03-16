@@ -1,3 +1,7 @@
+# v0.2.1
+
+* Update to angstrom >= 0.14.0
+
 # v0.2.0
 
 * Switch to dune
