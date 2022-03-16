@@ -32,8 +32,8 @@ let key_comment =
 
 let () = 
   let term =
-    Term.(const main $ bits $ key_comment),
-    Term.info "ssh-add" ~version:"0.1" in
-  match Term.eval term with
-  | `Error _ -> exit 1
-  | _ -> exit 0
+    Cmd.v (Cmd.info "ssh-add" ~version:"0.1")
+      Term.(const main $ bits $ key_comment)
+  in
+  Cmd.eval term
+  |> exit
