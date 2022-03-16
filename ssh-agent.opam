@@ -16,7 +16,7 @@ depends: [
   "ppx_cstruct" {build}
   "ppx_sexp_conv"
   "angstrom" {>= "0.14.0"}
-  "faraday" {>= "0.6" & < "0.8"}
+  "faraday" {>= "0.6"}
   "mirage-crypto"
   "mirage-crypto-pk"
   "cstruct"
