@@ -74,6 +74,7 @@ let sign priv (sign_flags : Protocol_number.sign_flag list) blob =
         Wire.write_string t alg_string;
         Wire.write_string t (Cstruct.to_string signed)))
   | Privkey.Ssh_dss _
+  | Privkey.Ssh_ed25519 _
   | Privkey.Blob _ ->
     failwith "Not implemented :-("
 

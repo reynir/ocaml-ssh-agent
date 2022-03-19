@@ -3,4 +3,4 @@
  (public_name ssh-agent)
  (preprocess
   (pps ppx_cstruct ppx_sexp_conv))
- (libraries cstruct angstrom mirage-crypto mirage-crypto-pk faraday sexplib))
+ (libraries cstruct angstrom mirage-crypto mirage-crypto-pk mirage-crypto-ec faraday sexplib))

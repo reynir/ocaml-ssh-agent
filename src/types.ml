@@ -3,6 +3,8 @@ module Pubkey = struct
 
   type ssh_rsa = Mirage_crypto_pk.Rsa.pub
 
+  type ssh_ed25519 = Mirage_crypto_ec.Ed25519.pub
+
   type options = (string * string) list
 
   type ssh_rsa_cert_tbs = {
@@ -27,6 +29,7 @@ module Pubkey = struct
     | Ssh_dss of ssh_dss
     | Ssh_rsa of ssh_rsa
     | Ssh_rsa_cert of ssh_rsa_cert
+    | Ssh_ed25519 of ssh_ed25519
     | Blob of {
         key_type : string;
         key_blob : string;
@@ -38,10 +41,13 @@ module Privkey = struct
 
   type ssh_rsa = Mirage_crypto_pk.Rsa.priv
 
+  type ssh_ed25519 = Mirage_crypto_ec.Ed25519.priv
+
   type t =
     | Ssh_dss of ssh_dss
     | Ssh_rsa of ssh_rsa
     | Ssh_rsa_cert of ssh_rsa * Pubkey.ssh_rsa_cert
+    | Ssh_ed25519 of ssh_ed25519
     | Blob of {
         key_type : string;
         key_blob : string;

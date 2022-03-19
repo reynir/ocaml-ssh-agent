@@ -81,6 +81,10 @@ and write_pubkey t key =
   | Ssh_rsa_cert { to_be_signed; signature; } ->
     write_ssh_rsa_cert_tbs t to_be_signed;
     Wire.write_string t signature
+  | Ssh_ed25519 pubkey ->
+    Wire.write_string t "ssh-ed25519";
+    Wire.write_string t
+      (Cstruct.to_string (Mirage_crypto_ec.Ed25519.pub_to_cstruct pubkey))
   | Blob { key_type; key_blob } ->
     Wire.write_string t key_type;
     Faraday.write_string t key_blob
@@ -112,6 +116,12 @@ let write_privkey t key =
     Wire.write_mpint t q';
     Wire.write_mpint t p;
     Wire.write_mpint t q
+  | Ssh_ed25519 privkey ->
+    let privkey = Mirage_crypto_ec.Ed25519.priv_to_cstruct privkey
+    and pubkey = Mirage_crypto_ec.Ed25519.(pub_to_cstruct (pub_of_priv privkey)) in
+    Wire.write_string t "ssh-ed25519";
+    Wire.write_string t (Cstruct.to_string pubkey);
+    Wire.write_string t (Cstruct.to_string (Cstruct.append privkey pubkey))
   | Blob { key_type; key_blob } ->
     Wire.write_string t key_type;
     Faraday.write_string t key_blob

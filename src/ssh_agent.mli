@@ -3,6 +3,8 @@ module Pubkey : sig
 
   type ssh_rsa = Mirage_crypto_pk.Rsa.pub
 
+  type ssh_ed25519 = Mirage_crypto_ec.Ed25519.pub
+
   type options = (string * string) list
   (** [options] is a list of pairs of options used in [critical_options] and
    * [extensions]. The first element is the name of the option, and the second
@@ -52,6 +54,7 @@ module Pubkey : sig
     | Ssh_dss of ssh_dss
     | Ssh_rsa of ssh_rsa
     | Ssh_rsa_cert of ssh_rsa_cert
+    | Ssh_ed25519 of ssh_ed25519
     | Blob of {
         key_type : string;
         key_blob : string;
@@ -65,11 +68,14 @@ module Privkey : sig
 
   type ssh_rsa = Mirage_crypto_pk.Rsa.priv
 
+  type ssh_ed25519 = Mirage_crypto_ec.Ed25519.priv
+
   type t =
     | Ssh_dss of ssh_dss
     | Ssh_rsa of ssh_rsa
     | Ssh_rsa_cert of ssh_rsa * Pubkey.ssh_rsa_cert
     (** [Ssh_rsa_cert (key, cert)] is a private key with a certificate for said key. *)
+    | Ssh_ed25519 of ssh_ed25519
     | Blob of {
         key_type : string;
         key_blob : string;

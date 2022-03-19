@@ -19,6 +19,7 @@ depends: [
   "faraday" {>= "0.6"}
   "mirage-crypto"
   "mirage-crypto-pk"
+  "mirage-crypto-ec"
   "cstruct"
   "sexplib"
   "alcotest" {with-test}
