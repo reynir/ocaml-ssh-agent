@@ -1,14 +1,9 @@
-open Sexplib.Conv
-
 module Pubkey = struct
   type ssh_dss = Mirage_crypto_pk.Dsa.pub
-  [@@deriving sexp_of]
 
   type ssh_rsa = Mirage_crypto_pk.Rsa.pub
-  [@@deriving sexp_of]
 
   type options = (string * string) list
-  [@@deriving sexp_of]
 
   type ssh_rsa_cert_tbs = {
     nonce : string;
@@ -36,15 +31,12 @@ module Pubkey = struct
         key_type : string;
         key_blob : string;
       }
-  [@@deriving sexp_of]
 end
 
 module Privkey = struct
   type ssh_dss = Mirage_crypto_pk.Dsa.priv
-  [@@deriving sexp_of]
 
   type ssh_rsa = Mirage_crypto_pk.Rsa.priv
-  [@@deriving sexp_of]
 
   type t =
     | Ssh_dss of ssh_dss
@@ -54,24 +46,20 @@ module Privkey = struct
         key_type : string;
         key_blob : string;
       }
-  [@@deriving sexp_of]
 end
 
 type identity = {
   pubkey : Pubkey.t;
   comment : string;
 }
-[@@deriving sexp_of]
 
 type sign_flag = Protocol_number.sign_flag =
   | SSH_AGENT_RSA_SHA2_256
   | SSH_AGENT_RSA_SHA2_512
-[@@deriving sexp_of]
 
 type key_constraint =
   | Lifetime of int32 (* uint32 *)
   | Confirm
-[@@deriving sexp_of]
 
 type ssh_agent_request_type = [
   | `Ssh_agentc_request_identities
@@ -116,11 +104,9 @@ type _ ssh_agent_request =
   | Ssh_agentc_extension :
       { extension_type : string; extension_contents : string }
     -> [`Ssh_agentc_extension] ssh_agent_request
-[@@deriving sexp_of]
 
 type any_ssh_agent_request =
   Any_request : 'a ssh_agent_request -> any_ssh_agent_request
-[@@deriving sexp_of]
 
 type _ ssh_agent_response =
   | Ssh_agent_failure : [<ssh_agent_request_type] ssh_agent_response
@@ -134,11 +120,9 @@ type _ ssh_agent_response =
     -> [`Ssh_agentc_request_identities] ssh_agent_response
   | Ssh_agent_sign_response : string
     -> [`Ssh_agentc_sign_request] ssh_agent_response
-[@@deriving sexp_of]
 
 type any_ssh_agent_response =
   Any_response : 'a ssh_agent_response -> any_ssh_agent_response
-[@@deriving sexp_of]
 
 type request_handler =
   { handle : 'a . 'a ssh_agent_request -> 'a ssh_agent_response; }

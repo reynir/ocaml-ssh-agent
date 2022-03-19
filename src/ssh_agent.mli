@@ -1,12 +1,9 @@
 module Pubkey : sig
   type ssh_dss = Mirage_crypto_pk.Dsa.pub
-  [@@deriving sexp_of]
 
   type ssh_rsa = Mirage_crypto_pk.Rsa.pub
-  [@@deriving sexp_of]
 
   type options = (string * string) list
-  [@@deriving sexp_of]
   (** [options] is a list of pairs of options used in [critical_options] and
    * [extensions]. The first element is the name of the option, and the second
    * is the option's data.
@@ -61,15 +58,12 @@ module Pubkey : sig
       }
     (** [Blob] is an unknown ssh wire string-unwrapped public key of type
      * [key_type]. *)
-  [@@deriving sexp_of]
 end
 
 module Privkey : sig
   type ssh_dss = Mirage_crypto_pk.Dsa.priv
-  [@@deriving sexp_of]
 
   type ssh_rsa = Mirage_crypto_pk.Rsa.priv
-  [@@deriving sexp_of]
 
   type t =
     | Ssh_dss of ssh_dss
@@ -82,7 +76,6 @@ module Privkey : sig
       }
     (** [Blob] is an unknown ssh wire string-unwrapped private key of type
      * [key_type]. *)
-  [@@deriving sexp_of]
 end
 
 type identity = {
@@ -92,14 +85,12 @@ type identity = {
 (** [identity]s are returned when querying for identities, i.e.
  * in [Ssh_agent_identities_answer] when responding to
  * [Ssh_agentc_request_identities]. *)
-[@@deriving sexp_of]
 
 (** Flags for what hashing algorithm is desired when doing a signing request.
  * SHA1 is assumed otherwise. *)
 type sign_flag = Protocol_number.sign_flag =
   | SSH_AGENT_RSA_SHA2_256
   | SSH_AGENT_RSA_SHA2_512
-[@@deriving sexp_of]
 
 type key_constraint =
   | Lifetime of int32 (* uint32 *)
@@ -107,7 +98,6 @@ type key_constraint =
   (* Extensions are not implemented because the extension-specific data has
    * unknown length. This requires making the parser extensible for key
    * constraints. *)
-[@@deriving sexp_of]
 
 (** [ssh_agent_request_type] is used in the below GADTs for enforcing protocol
  * semantics. It represents types of requests. The [`Ssh_agentc_successable]
@@ -156,11 +146,9 @@ type _ ssh_agent_request =
   | Ssh_agentc_extension :
       { extension_type : string; extension_contents : string }
     -> [`Ssh_agentc_extension] ssh_agent_request
-[@@deriving sexp_of]
 
 type any_ssh_agent_request =
   Any_request : 'a ssh_agent_request -> any_ssh_agent_request
-[@@deriving sexp_of]
 
 type _ ssh_agent_response =
   | Ssh_agent_failure : [<ssh_agent_request_type] ssh_agent_response
@@ -174,11 +162,9 @@ type _ ssh_agent_response =
     -> [`Ssh_agentc_request_identities] ssh_agent_response
   | Ssh_agent_sign_response : string
     -> [`Ssh_agentc_sign_request] ssh_agent_response
-[@@deriving sexp_of]
 
 type any_ssh_agent_response =
   Any_response : 'a ssh_agent_response -> any_ssh_agent_response
-[@@deriving sexp_of]
 
 type request_handler =
   { handle : 'a . 'a ssh_agent_request -> 'a ssh_agent_response; }
