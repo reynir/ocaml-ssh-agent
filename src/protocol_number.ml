@@ -26,13 +26,13 @@ type ssh_agent =
   | SSH_AGENTC_ADD_SMARTCARD_KEY_CONSTRAINED [@id 26]
   | SSH_AGENTC_EXTENSION [@id 27]
   | SSH_AGENT_EXTENSION_FAILURE [@id 28]
-[@@uint8_t][@@sexp]]
+[@@uint8_t]]
 
 [%%cenum
 type sign_flag =
   | SSH_AGENT_RSA_SHA2_256 [@id 2]
   | SSH_AGENT_RSA_SHA2_512 [@id 4]
-[@@uint8_t][@@sexp]]
+[@@uint8_t]]
 
 let mask_to_sign_flags mask =
   let mask_test mask flag =
@@ -45,4 +45,4 @@ let mask_to_sign_flags mask =
 type ssh_cert_type =
   | Ssh_cert_type_user [@id 1]
   | Ssh_cert_type_host [@id 2]
-[@@uint32_t][@@sexp]]
+[@@uint32_t]]
