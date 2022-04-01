@@ -61,6 +61,10 @@ module Pubkey : sig
       }
     (** [Blob] is an unknown ssh wire string-unwrapped public key of type
      * [key_type]. *)
+
+  val equal : t -> t -> bool
+  (** [equal pubkey pubkey'] is true if [pubkey] and [pubkey'] represent the
+   * same public key *)
 end
 
 module Privkey : sig

@@ -34,6 +34,18 @@ module Pubkey = struct
         key_type : string;
         key_blob : string;
       }
+
+  let equal k1 k2 =
+    match k1, k2 with
+    | Ssh_ed25519 k1, Ssh_ed25519 k2 ->
+      Mirage_crypto_ec.Ed25519.(Cstruct.equal (pub_to_cstruct k1) (pub_to_cstruct k2))
+    | Ssh_dss _, Ssh_dss _
+    | Ssh_rsa _, Ssh_rsa _
+    | Ssh_rsa_cert _, Ssh_rsa_cert _
+    | Blob _, Blob _ ->
+      (* XXX: we shouldn't assume polymorphic compare keeps working *)
+      k1 = k2
+    | _, _ -> false
 end
 
 module Privkey = struct
