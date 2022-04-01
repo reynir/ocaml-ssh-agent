@@ -6,10 +6,19 @@ let with_faraday (f : Faraday.t -> unit) : string =
 
 module Request : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request = struct
   type t = Ssh_agent.any_ssh_agent_request
-  let pp fmt (t : Ssh_agent.any_ssh_agent_request) =
-    Fmt.string fmt
-      (Ssh_agent.sexp_of_any_ssh_agent_request t
-       |> Sexplib.Sexp.to_string)
+  let pp fmt (_t : Ssh_agent.any_ssh_agent_request) =
+    Fmt.string fmt "FIXME"
+
+  let equal_key (k1 : Ssh_agent.Privkey.t) (k2 : Ssh_agent.Privkey.t) =
+    let open Ssh_agent.Privkey in
+    match k1, k2 with
+    | Ssh_ed25519 k1, Ssh_ed25519 k2 ->
+      Mirage_crypto_ec.Ed25519.(Cstruct.equal (priv_to_cstruct k1) (priv_to_cstruct k2))
+    | Ssh_dss _, Ssh_dss _
+    | Ssh_rsa _, Ssh_rsa _
+    | Ssh_rsa_cert (_, _), Ssh_rsa_cert (_, _)
+    | Blob _, Blob _ -> k1 = k2
+    | _, _ -> false
 
   let equal (x1 : t) (x2 : t) =
     let open Ssh_agent in
@@ -19,13 +28,13 @@ module Request : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request
       true
     | Any_request (Ssh_agentc_sign_request (pubkey1,data1,flags1)),
       Any_request (Ssh_agentc_sign_request (pubkey2,data2,flags2)) ->
-      pubkey1 = pubkey2
+      Pubkey.equal pubkey1 pubkey2
       && data1 = data2
       && flags1 = flags2
     (* FIXME: unordered list *)
     | Any_request (Ssh_agentc_add_identity { privkey = p1; key_comment = c1; }),
       Any_request (Ssh_agentc_add_identity { privkey = p2; key_comment = c2; }) ->
-      p1 = p2 && c1 = c2
+      equal_key p1 p2 && c1 = c2
     | Any_request (Ssh_agentc_remove_identity id1),
       Any_request (Ssh_agentc_remove_identity id2) ->
       id1 = id2
@@ -48,7 +57,7 @@ module Request : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request
                      { privkey = p1; key_comment = c1; key_constraints = constraints1}),
       Any_request (Ssh_agentc_add_id_constrained
                      { privkey = p2; key_comment = c2; key_constraints = constraints2}) ->
-      p1 = p2 && c1 = c2 && constraints1 = constraints2
+      equal_key p1 p2 && c1 = c2 && constraints1 = constraints2
       (* FIXME: unordered list in the constraints *)
     | Any_request (Ssh_agentc_add_smartcard_key_constrained
                      { smartcard_id = t1; smartcard_pin = pin1; smartcard_constraints = c1 }),
@@ -64,10 +73,8 @@ end
 
 module Response : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_response = struct
   type t = Ssh_agent.any_ssh_agent_response
-  let pp fmt (t : Ssh_agent.any_ssh_agent_response) =
-    Fmt.string fmt
-      (Ssh_agent.sexp_of_any_ssh_agent_response t
-       |> Sexplib.Sexp.to_string)
+  let pp fmt (_t : Ssh_agent.any_ssh_agent_response) =
+    Fmt.string fmt "FIXME"
   let equal (x1 : t) (x2 : t) =
     let open Ssh_agent in
     match x1, x2 with
@@ -97,6 +104,10 @@ let privkey = Mirage_crypto_pk.Rsa.generate ~bits:1024 ()
 let pubkey = Mirage_crypto_pk.Rsa.pub_of_priv privkey
 let privkey = Ssh_agent.Privkey.Ssh_rsa privkey
 let pubkey = Ssh_agent.Pubkey.Ssh_rsa pubkey
+
+let ed25519, ed25519_pub = Mirage_crypto_ec.Ed25519.generate ()
+let ed25519, ed25519_pub =
+  Ssh_agent.(Privkey.Ssh_ed25519 ed25519, Pubkey.Ssh_ed25519 ed25519_pub)
 
 let serialize_parse s request =
   Alcotest.(check m_request) s (Ssh_agent.Any_request request)
@@ -162,6 +173,30 @@ let serialize_parse_client = [
   "extension", `Quick, serialize_parse_extension;
 ]
 
+let serialize_parse_sign_request_ed25519 () =
+  serialize_parse "serialize_parse_sign_request"
+    (Ssh_agent.Ssh_agentc_sign_request (ed25519_pub, "KEY COMMENT", []))
+
+let serialize_parse_add_identity_ed25519 () =
+  serialize_parse "serialize_parse_add_identity"
+    (Ssh_agent.Ssh_agentc_add_identity { privkey = ed25519; key_comment = "KEY COMMENT" })
+
+let serialize_parse_add_id_constrained_empty_ed25519 () =
+  serialize_parse "serialize_parse_add_id_constrained"
+    (Ssh_agent.Ssh_agentc_add_id_constrained
+       { privkey = ed25519; key_comment = "KEY COMMENT"; key_constraints = [] })
+
+let serialize_parse_remove_identity_ed25519 () =
+  serialize_parse "serialize_parse_remove_identity"
+    (Ssh_agent.Ssh_agentc_remove_identity ed25519_pub)
+
+let serialize_parse_client_ed25519 = [
+  "sign_request", `Quick, serialize_parse_sign_request_ed25519;
+  "add_identity", `Quick, serialize_parse_add_identity_ed25519;
+  "add_id_constrained_empty", `Quick, serialize_parse_add_id_constrained_empty_ed25519;
+  "remove_identity", `Quick, serialize_parse_remove_identity_ed25519;
+]
+
 let serialize_parse_response s (response : 'a Ssh_agent.ssh_agent_response) =
   let extension = match Ssh_agent.Any_response response with
     | Ssh_agent.Any_response Ssh_agent.Ssh_agent_extension_failure ->
@@ -215,5 +250,6 @@ let serialize_parse_server = [
 let () =
   Alcotest.run "Serialize |> Parse identity" [
     "serialize_parse_client", serialize_parse_client;
+    "serialize_parse_client_ed25519", serialize_parse_client_ed25519;
     "serialize_parse_server", serialize_parse_server;
   ]

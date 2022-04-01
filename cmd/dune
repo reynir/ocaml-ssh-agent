@@ -1,3 +1,9 @@
 (executable
  (name ssh_add)
- (libraries ssh-agent mirage-crypto-pk mirage-crypto-rng.unix ssh-agent-unix cmdliner))
+ (modules ssh_add)
+ (libraries ssh-agent mirage-crypto-pk mirage-crypto-ec mirage-crypto-rng.unix ssh-agent-unix cmdliner))
+
+(executable
+  (name ssh_agent_server)
+  (modules ssh_agent_server)
+  (libraries ssh-agent mirage-crypto-pk mirage-crypto-ec mirage-crypto-rng.unix ssh-agent-unix cmdliner))

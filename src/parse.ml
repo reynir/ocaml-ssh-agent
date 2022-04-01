@@ -57,6 +57,9 @@ let angstrom_of_result source r =
   | Ok v ->
     Angstrom.return v
 
+let mirage_crypto_ec_error_to_msg e =
+  `Msg (Format.asprintf "%a" Mirage_crypto_ec.pp_error e)
+
 let pub_ssh_dss =
   let open Angstrom in
   Wire.mpint >>= fun p ->
@@ -72,6 +75,14 @@ let pub_ssh_rsa =
   Wire.mpint >>= fun n ->
   Mirage_crypto_pk.Rsa.pub ~e ~n
   |> angstrom_of_result "Mirage_crypto_pk.Rsa.pub"
+
+let pub_ssh_ed25519 =
+  let open Angstrom in
+  (* https://www.rfc-editor.org/rfc/rfc8032#section-5.1.5 *)
+  Wire.string >>= fun key ->
+  Mirage_crypto_ec.Ed25519.pub_of_cstruct (Cstruct.of_string key)
+  |> Result.map_error mirage_crypto_ec_error_to_msg
+  |> angstrom_of_result "Mirage_crypto_ec.Ed25519.pub_of_cstruct"
 
 let string_tuple =
   let open Angstrom in
@@ -129,11 +140,13 @@ and pubkey can_be_cert =
     pub_ssh_rsa >>= fun pubkey ->
     return (Pubkey.Ssh_rsa pubkey)
   | "ssh-rsa-cert-v01@openssh.com" ->
-    if can_be_cert
-    then
+    if can_be_cert then
       pub_ssh_rsa_cert () >>= fun ssh_rsa_cert ->
       return (Pubkey.Ssh_rsa_cert ssh_rsa_cert)
     else fail "ssh-rsa-cert-v01@openssh.com where certificates are disallowed"
+  | "ssh-ed25519" ->
+    pub_ssh_ed25519 >>= fun pubkey ->
+    return (Pubkey.Ssh_ed25519 pubkey)
   | key_type ->
     pub_blob key_type
 
@@ -177,6 +190,40 @@ let ssh_rsa_cert =
   >>= fun priv ->
   return (priv, cert)
 
+let ssh_ed25519 =
+  let open Angstrom in
+  Wire.string >>= fun pubkey ->
+  Wire.string >>= fun privkey_pubkey ->
+  let* () =
+    if String.length pubkey <> 32 then
+      fail "bad ssh-ed25519 key"
+    else if String.length privkey_pubkey <> 64 then
+      fail "bad ssh-ed25519 key"
+    else
+      return ()
+  in
+  let pubkey' = String.sub privkey_pubkey 32 32 in
+  let privkey = String.sub privkey_pubkey 0 32 in
+  let* () =
+    if not (String.equal pubkey pubkey') then
+      fail "bad ssh-ed25519 key"
+    else return ()
+  in
+  let* privkey =
+    Mirage_crypto_ec.Ed25519.priv_of_cstruct (Cstruct.of_string privkey)
+    |> Result.map_error mirage_crypto_ec_error_to_msg
+    |> angstrom_of_result "bad ssh-ed25519 key"
+  in
+  let pubkey' = Mirage_crypto_ec.Ed25519.pub_of_priv privkey in
+  let* () =
+    if Cstruct.equal (Cstruct.of_string pubkey)
+        (Mirage_crypto_ec.Ed25519.pub_to_cstruct pubkey') then
+      return ()
+    else
+      fail "bad ssh-ed25519 key"
+  in
+  return privkey
+
 let blob key_type =
   let open Angstrom in
   take_while (fun _ -> true) >>= fun key_blob ->
@@ -194,6 +241,9 @@ let privkey =
   | "ssh-rsa-cert-v01@openssh.com" ->
     ssh_rsa_cert >>= fun (priv, cert) ->
     return (Privkey.Ssh_rsa_cert (priv, cert))
+  | "ssh-ed25519" ->
+    ssh_ed25519 >>= fun priv ->
+    return (Privkey.Ssh_ed25519 priv)
   | key_type ->
     blob key_type
 

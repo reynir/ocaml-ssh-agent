@@ -73,6 +73,11 @@ let sign priv (sign_flags : Protocol_number.sign_flag list) blob =
     Serialize.(with_faraday (fun t ->
         Wire.write_string t alg_string;
         Wire.write_string t (Cstruct.to_string signed)))
+  | Privkey.Ssh_ed25519 key ->
+    let signature = Mirage_crypto_ec.Ed25519.sign ~key (Cstruct.of_string blob) in
+    Serialize.(with_faraday (fun t ->
+        Wire.write_string t "ssh-ed25519";
+        Wire.write_string t (Cstruct.to_string signature)))
   | Privkey.Ssh_dss _
   | Privkey.Blob _ ->
     failwith "Not implemented :-("
