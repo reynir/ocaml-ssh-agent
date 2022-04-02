@@ -14,11 +14,15 @@ depends: [
   "ocaml" {>= "4.08.0"}
   "dune" {>= "1.0"}
   "ppx_cstruct" {build}
-  "angstrom" {>= "0.14.0"}
+  "angstrom" {>= "0.15.0"}
   "faraday" {>= "0.6"}
   "mirage-crypto"
   "mirage-crypto-pk"
   "mirage-crypto-ec"
   "cstruct"
   "alcotest" {with-test}
+]
+conflicts: [
+  "result" {< "1.5"}
+  "ppxlib" {< "0.9.0"}
 ]
