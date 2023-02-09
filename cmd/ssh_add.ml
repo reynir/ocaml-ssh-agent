@@ -7,7 +7,7 @@ let gen_key key_type bits =
     Ssh_agent.Privkey.Ssh_ed25519 priv
 
 let main key_type bits key_comment =
-  let () = Mirage_crypto_rng_unix.initialize () in
+  let () = Mirage_crypto_rng_unix.initialize (module Mirage_crypto_rng.Fortuna) in
   let sock_path =
     match Sys.getenv "SSH_AUTH_SOCK" with
     | path -> path
