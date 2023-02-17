@@ -1,3 +1,7 @@
+# v0.4.1 2023-02-17
+
+* Update tests to mirage-crypto-rng 0.11.0
+
 # v0.4.0 2022-04-01
 
 **breaking changes**
