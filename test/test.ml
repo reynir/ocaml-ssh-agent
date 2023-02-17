@@ -99,7 +99,7 @@ let m_response = (module Response
                    : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_response)
 
 
-let () = Mirage_crypto_rng_unix.initialize ()
+let () = Mirage_crypto_rng_unix.initialize (module Mirage_crypto_rng.Fortuna)
 let privkey = Mirage_crypto_pk.Rsa.generate ~bits:1024 ()
 let pubkey = Mirage_crypto_pk.Rsa.pub_of_priv privkey
 let privkey = Ssh_agent.Privkey.Ssh_rsa privkey
