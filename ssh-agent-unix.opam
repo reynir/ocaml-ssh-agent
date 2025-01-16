@@ -14,3 +14,4 @@ depends: [
   "angstrom-unix"
   "faraday"
 ]
+x-maintenance-intent: [ "(none)" ]

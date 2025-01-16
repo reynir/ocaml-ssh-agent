@@ -27,3 +27,4 @@ conflicts: [
   "result" {< "1.5"}
   "ppxlib" {< "0.9.0"}
 ]
+x-maintenance-intent: [ "(latest)" ]
