@@ -13,7 +13,7 @@ module Request : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_request
     let open Ssh_agent.Privkey in
     match k1, k2 with
     | Ssh_ed25519 k1, Ssh_ed25519 k2 ->
-      Mirage_crypto_ec.Ed25519.(Cstruct.equal (priv_to_cstruct k1) (priv_to_cstruct k2))
+      Mirage_crypto_ec.Ed25519.(String.equal (priv_to_octets k1) (priv_to_octets k2))
     | Ssh_dss _, Ssh_dss _
     | Ssh_rsa _, Ssh_rsa _
     | Ssh_rsa_cert (_, _), Ssh_rsa_cert (_, _)
@@ -99,7 +99,7 @@ let m_response = (module Response
                    : Alcotest.TESTABLE with type t = Ssh_agent.any_ssh_agent_response)
 
 
-let () = Mirage_crypto_rng_unix.initialize (module Mirage_crypto_rng.Fortuna)
+let () = Mirage_crypto_rng_unix.use_default ()
 let privkey = Mirage_crypto_pk.Rsa.generate ~bits:1024 ()
 let pubkey = Mirage_crypto_pk.Rsa.pub_of_priv privkey
 let privkey = Ssh_agent.Privkey.Ssh_rsa privkey
