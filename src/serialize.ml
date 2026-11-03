@@ -21,12 +21,12 @@ module Wire = struct
     if mpint = Z.zero
     then write_uint32 t 0l
     else
-      let mpint = Mirage_crypto_pk.Z_extra.to_cstruct_be mpint in
+      let mpint = Mirage_crypto_pk.Z_extra.to_octets_be mpint in
       let mpint_padded =
-        if Cstruct.get_uint8 mpint 0 land 0x80 <> 0
-        then Cstruct.append (Cstruct.of_string "\000") mpint
+        if String.get_uint8 mpint 0 land 0x80 <> 0
+        then "\000" ^ mpint
         else mpint in
-      write_string t (Cstruct.to_string mpint_padded)
+      write_string t mpint_padded
 
   let write_name_list t name_list =
     write_string t (String.concat "," name_list)
@@ -84,7 +84,7 @@ and write_pubkey t key =
   | Ssh_ed25519 pubkey ->
     Wire.write_string t "ssh-ed25519";
     Wire.write_string t
-      (Cstruct.to_string (Mirage_crypto_ec.Ed25519.pub_to_cstruct pubkey))
+      (Mirage_crypto_ec.Ed25519.pub_to_octets pubkey)
   | Blob { key_type; key_blob } ->
     Wire.write_string t key_type;
     Faraday.write_string t key_blob
@@ -117,11 +117,11 @@ let write_privkey t key =
     Wire.write_mpint t p;
     Wire.write_mpint t q
   | Ssh_ed25519 privkey ->
-    let privkey = Mirage_crypto_ec.Ed25519.priv_to_cstruct privkey
-    and pubkey = Mirage_crypto_ec.Ed25519.(pub_to_cstruct (pub_of_priv privkey)) in
+    let privkey = Mirage_crypto_ec.Ed25519.priv_to_octets privkey
+    and pubkey = Mirage_crypto_ec.Ed25519.(pub_to_octets (pub_of_priv privkey)) in
     Wire.write_string t "ssh-ed25519";
-    Wire.write_string t (Cstruct.to_string pubkey);
-    Wire.write_string t (Cstruct.to_string (Cstruct.append privkey pubkey))
+    Wire.write_string t pubkey;
+    Wire.write_string t (privkey ^ pubkey)
   | Blob { key_type; key_blob } ->
     Wire.write_string t key_type;
     Faraday.write_string t key_blob

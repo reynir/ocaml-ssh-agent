@@ -1,7 +1,5 @@
 let cstruct_of_array arr =
-  let r = Cstruct.create (Array.length arr) in
-  Array.iteri (fun idx v -> Cstruct.set_uint8 r idx v) arr;
-  r
+  String.init (Array.length arr) (fun i -> Char.chr arr.(i))
 
 let id_sha1 = [|
   0x30; 0x21; (* type Sequence, length 0x21 (33) *)
