@@ -60,16 +60,16 @@ let unpack_any_response (type a) (request : a ssh_agent_request) (response : any
 let sign priv (sign_flags : Protocol_number.sign_flag list) blob =
   match priv with
   | Privkey.Ssh_rsa key | Privkey.Ssh_rsa_cert (key, _) ->
-    let alg_string, to_sign =
+    let alg_string, hash =
       if List.mem Protocol_number.SSH_AGENT_RSA_SHA2_512 sign_flags
       then let digest = Digestif.SHA512.(to_raw_string (digest_string blob)) in
-        "rsa-sha2-512", Util.id_sha512 ^ digest
+        "rsa-sha2-512", `SHA512
       else if List.mem Protocol_number.SSH_AGENT_RSA_SHA2_256 sign_flags
       then let digest = Digestif.SHA256.(to_raw_string (digest_string blob)) in
-        "rsa-sha2-256", Util.id_sha256 ^ digest
+        "rsa-sha2-256", `SHA256
       else let digest = Digestif.SHA1.(to_raw_string (digest_string blob)) in
-        "ssh-rsa", Util.id_sha1 ^ digest in
-    let signed = Mirage_crypto_pk.Rsa.PKCS1.sig_encode ~key to_sign in
+        "ssh-rsa", `SHA1 in
+    let signed = Mirage_crypto_pk.Rsa.PKCS1.sign ~hash ~key (`Message blob) in
     Serialize.(with_faraday (fun t ->
         Wire.write_string t alg_string;
         Wire.write_string t signed))
