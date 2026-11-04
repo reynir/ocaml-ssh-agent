@@ -13,17 +13,14 @@ build: [
 depends: [
   "ocaml" {>= "4.08.0"}
   "dune" {>= "1.0"}
-  "ppx_cstruct" {build & >= "5.2.0"}
   "angstrom" {>= "0.15.0"}
   "faraday" {>= "0.6"}
-  "mirage-crypto"
-  "mirage-crypto-pk"
-  "mirage-crypto-ec"
-  "mirage-crypto-rng" {with-test & >= "0.11.0"}
+  "mirage-crypto-pk" {>= "1.0.0"}
+  "mirage-crypto-ec" {>= "1.0.0"}
+  "mirage-crypto-rng" {with-test & >= "1.2.0"}
   "alcotest" {with-test}
 ]
 conflicts: [
   "result" {< "1.5"}
-  "ppxlib" {< "0.9.0"}
 ]
 x-maintenance-intent: [ "(latest)" ]
