@@ -1,3 +1,9 @@
+# v0.5.0 2026-11-04
+
+* Don't use polymorphic compare for public keys.
+**breaking changes**
+* Update to newer mirage-crypto dropping cstruct, ppx_cstruct.
+
 # v0.4.0 2022-04-01
 
 **breaking changes**
