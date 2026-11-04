@@ -35,16 +35,55 @@ module Pubkey = struct
         key_blob : string;
       }
 
-  let equal k1 k2 =
+  let options_equal =
+    let eq (a1, a2) (b1, b2) = String.equal a1 b1 && String.equal a2 b2 in
+    List.equal eq
+
+  let dsa_equal
+      { Mirage_crypto_pk.Dsa.p=p1; q=q1; gg=gg1; y=y1 }
+      { Mirage_crypto_pk.Dsa.p=p2; q=q2; gg=gg2; y=y2 }
+    =
+    Z.equal p1 p2
+    && Z.equal q1 q2
+    && Z.equal gg1 gg2
+    && Z.equal y1 y2
+
+  let rsa_equal
+      ({ e; n } : Mirage_crypto_pk.Rsa.pub)
+      (b : Mirage_crypto_pk.Rsa.pub) =
+      Z.equal e b.e && Z.equal n b.n
+
+  let rec ssh_rsa_cert_tbs_equal
+      { nonce; pubkey; serial; typ; key_id; valid_principals;
+        valid_after; valid_before; critical_options;
+        extensions; reserved; signature_key; }
+      b =
+    String.equal nonce b.nonce
+    && rsa_equal pubkey b.pubkey
+    && Int64.equal serial b.serial
+    && typ = b.typ
+    && String.equal key_id b.key_id
+    && List.equal String.equal valid_principals b.valid_principals
+    && Int64.equal valid_after b.valid_after
+    && Int64.equal valid_before b.valid_before
+    && options_equal critical_options b.critical_options
+    && options_equal extensions b.extensions
+    && String.equal reserved b.reserved
+    && equal signature_key b.signature_key
+  and ssh_rsa_cert_equal { to_be_signed; signature } b =
+    String.equal signature b.signature
+    && ssh_rsa_cert_tbs_equal to_be_signed b.to_be_signed
+  and equal k1 k2 =
     match k1, k2 with
     | Ssh_ed25519 k1, Ssh_ed25519 k2 ->
       Mirage_crypto_ec.Ed25519.(String.equal (pub_to_octets k1) (pub_to_octets k2))
-    | Ssh_dss _, Ssh_dss _
-    | Ssh_rsa _, Ssh_rsa _
-    | Ssh_rsa_cert _, Ssh_rsa_cert _
-    | Blob _, Blob _ ->
-      (* XXX: we shouldn't assume polymorphic compare keeps working *)
-      k1 = k2
+    | Ssh_dss a, Ssh_dss b ->
+      dsa_equal a b
+    | Ssh_rsa a, Ssh_rsa b -> rsa_equal a b
+    | Ssh_rsa_cert a, Ssh_rsa_cert b ->
+      ssh_rsa_cert_equal a b
+    | Blob { key_type; key_blob }, Blob b ->
+      String.equal key_type b.key_type && String.equal key_blob b.key_blob
     | _, _ -> false
 end
 
