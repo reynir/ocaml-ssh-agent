@@ -29,7 +29,7 @@ module Wire = struct
     then return Z.zero
     else take (Int32.to_int mpint_len)
       >>= fun mpint ->
-      return (Mirage_crypto_pk.Z_extra.of_cstruct_be (Cstruct.of_string mpint))
+      return (Mirage_crypto_pk.Z_extra.of_octets_be mpint)
 
   let name_list =
     string >>|
@@ -80,9 +80,9 @@ let pub_ssh_ed25519 =
   let open Angstrom in
   (* https://www.rfc-editor.org/rfc/rfc8032#section-5.1.5 *)
   Wire.string >>= fun key ->
-  Mirage_crypto_ec.Ed25519.pub_of_cstruct (Cstruct.of_string key)
+  Mirage_crypto_ec.Ed25519.pub_of_octets key
   |> Result.map_error mirage_crypto_ec_error_to_msg
-  |> angstrom_of_result "Mirage_crypto_ec.Ed25519.pub_of_cstruct"
+  |> angstrom_of_result "Mirage_crypto_ec.Ed25519.pub_of_octets"
 
 let string_tuple =
   let open Angstrom in
@@ -210,14 +210,14 @@ let ssh_ed25519 =
     else return ()
   in
   let* privkey =
-    Mirage_crypto_ec.Ed25519.priv_of_cstruct (Cstruct.of_string privkey)
+    Mirage_crypto_ec.Ed25519.priv_of_octets privkey
     |> Result.map_error mirage_crypto_ec_error_to_msg
     |> angstrom_of_result "bad ssh-ed25519 key"
   in
   let pubkey' = Mirage_crypto_ec.Ed25519.pub_of_priv privkey in
   let* () =
-    if Cstruct.equal (Cstruct.of_string pubkey)
-        (Mirage_crypto_ec.Ed25519.pub_to_cstruct pubkey') then
+    if String.equal pubkey
+        (Mirage_crypto_ec.Ed25519.pub_to_octets pubkey') then
       return ()
     else
       fail "bad ssh-ed25519 key"

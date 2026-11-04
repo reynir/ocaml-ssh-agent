@@ -186,6 +186,7 @@ module Parse : sig
   (** [ssh_agentc_message ~extension] parses an ssh-agent response. If
    * [extension] is [true], then the message is parsed as a response to a
    * [Ssh_agentc_extension] request. *)
+
   val ssh_agentc_message : any_ssh_agent_request Angstrom.t
   (** A parser for ssh-agent requests *)
 end

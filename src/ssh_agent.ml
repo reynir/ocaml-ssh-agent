@@ -60,24 +60,24 @@ let unpack_any_response (type a) (request : a ssh_agent_request) (response : any
 let sign priv (sign_flags : Protocol_number.sign_flag list) blob =
   match priv with
   | Privkey.Ssh_rsa key | Privkey.Ssh_rsa_cert (key, _) ->
-    let alg_string, to_sign =
+    let alg_string, hash =
       if List.mem Protocol_number.SSH_AGENT_RSA_SHA2_512 sign_flags
-      then let digest = Mirage_crypto.Hash.SHA512.digest (Cstruct.of_string blob) in
-        "rsa-sha2-512", Cstruct.append Util.id_sha512 digest
+      then
+        "rsa-sha2-512", `SHA512
       else if List.mem Protocol_number.SSH_AGENT_RSA_SHA2_256 sign_flags
-      then let digest = Mirage_crypto.Hash.SHA256.digest (Cstruct.of_string blob) in
-        "rsa-sha2-256", Cstruct.append Util.id_sha256 digest
-      else let digest = Mirage_crypto.Hash.SHA1.digest (Cstruct.of_string blob) in
-        "ssh-rsa", Cstruct.append Util.id_sha1 digest in
-    let signed = Mirage_crypto_pk.Rsa.PKCS1.sig_encode ~key to_sign in
+      then
+        "rsa-sha2-256", `SHA256
+      else
+        "ssh-rsa", `SHA1 in
+    let signed = Mirage_crypto_pk.Rsa.PKCS1.sign ~hash ~key (`Message blob) in
     Serialize.(with_faraday (fun t ->
         Wire.write_string t alg_string;
-        Wire.write_string t (Cstruct.to_string signed)))
+        Wire.write_string t signed))
   | Privkey.Ssh_ed25519 key ->
-    let signature = Mirage_crypto_ec.Ed25519.sign ~key (Cstruct.of_string blob) in
+    let signature = Mirage_crypto_ec.Ed25519.sign ~key blob in
     Serialize.(with_faraday (fun t ->
         Wire.write_string t "ssh-ed25519";
-        Wire.write_string t (Cstruct.to_string signature)))
+        Wire.write_string t signature))
   | Privkey.Ssh_dss _
   | Privkey.Blob _ ->
     failwith "Not implemented :-("

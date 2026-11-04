@@ -38,7 +38,7 @@ module Pubkey = struct
   let equal k1 k2 =
     match k1, k2 with
     | Ssh_ed25519 k1, Ssh_ed25519 k2 ->
-      Mirage_crypto_ec.Ed25519.(Cstruct.equal (pub_to_cstruct k1) (pub_to_cstruct k2))
+      Mirage_crypto_ec.Ed25519.(String.equal (pub_to_octets k1) (pub_to_octets k2))
     | Ssh_dss _, Ssh_dss _
     | Ssh_rsa _, Ssh_rsa _
     | Ssh_rsa_cert _, Ssh_rsa_cert _

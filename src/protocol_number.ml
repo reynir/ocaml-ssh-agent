@@ -1,38 +1,127 @@
-[%%cenum
+(* [%%cenum *)
 type ssh_agent =
-  | SSH_AGENT_reserved1 [@id 1]
-  | SSH_AGENT_reserved2 [@id 2]
-  | SSH_AGENT_reserved3 [@id 3]
-  | SSH_AGENT_reserved4 [@id 4]
-  | SSH_AGENT_FAILURE [@id 5]
-  | SSH_AGENT_SUCCES [@id 6]
-  | SSH_AGENT_reserved7 [@id 7]
-  | SSH_AGENT_reserved8 [@id 8]
-  | SSH_AGENT_reserved9 [@id 9]
-  | SSH_AGENT_reserved10 [@id 10]
-  | SSH_AGENTC_REQUEST_IDENTITIES [@id 11]
-  | SSH_AGENT_IDENTITIES_ANSWER [@id 12]
-  | SSH_AGENTC_SIGN_REQUEST [@id 13]
-  | SSH_AGENT_SIGN_RESPONSE [@id 14]
-  | SSH_AGENTC_ADD_IDENTITY [@id 17]
-  | SSH_AGENTC_REMOVE_IDENTITY [@id 18]
-  | SSH_AGENTC_REMOVE_ALL_IDENTITIES [@id 19]
-  | SSH_AGENTC_ADD_SMARTCARD_KEY [@id 20]
-  | SSH_AGENTC_REMOVE_SMARTCARD_KEY [@id 21]
-  | SSH_AGENTC_LOCK [@id 22]
-  | SSH_AGENTC_UNLOCK [@id 23]
-  | SSH_AGENT_reserved24 [@id 24]
-  | SSH_AGENTC_ADD_ID_CONSTRAINED [@id 25]
-  | SSH_AGENTC_ADD_SMARTCARD_KEY_CONSTRAINED [@id 26]
-  | SSH_AGENTC_EXTENSION [@id 27]
-  | SSH_AGENT_EXTENSION_FAILURE [@id 28]
-[@@uint8_t]]
+  | SSH_AGENT_reserved1
+  | SSH_AGENT_reserved2
+  | SSH_AGENT_reserved3
+  | SSH_AGENT_reserved4
+  | SSH_AGENT_FAILURE
+  | SSH_AGENT_SUCCES
+  | SSH_AGENT_reserved7
+  | SSH_AGENT_reserved8
+  | SSH_AGENT_reserved9
+  | SSH_AGENT_reserved10
+  | SSH_AGENTC_REQUEST_IDENTITIES
+  | SSH_AGENT_IDENTITIES_ANSWER
+  | SSH_AGENTC_SIGN_REQUEST
+  | SSH_AGENT_SIGN_RESPONSE
+  | SSH_AGENTC_ADD_IDENTITY
+  | SSH_AGENTC_REMOVE_IDENTITY
+  | SSH_AGENTC_REMOVE_ALL_IDENTITIES
+  | SSH_AGENTC_ADD_SMARTCARD_KEY
+  | SSH_AGENTC_REMOVE_SMARTCARD_KEY
+  | SSH_AGENTC_LOCK
+  | SSH_AGENTC_UNLOCK
+  | SSH_AGENT_reserved24
+  | SSH_AGENTC_ADD_ID_CONSTRAINED
+  | SSH_AGENTC_ADD_SMARTCARD_KEY_CONSTRAINED
+  | SSH_AGENTC_EXTENSION
+  | SSH_AGENT_EXTENSION_FAILURE
 
-[%%cenum
+let ssh_agent_to_int = function
+  | SSH_AGENT_reserved1 -> 1
+  | SSH_AGENT_reserved2 -> 2
+  | SSH_AGENT_reserved3 -> 3
+  | SSH_AGENT_reserved4 -> 4
+  | SSH_AGENT_FAILURE -> 5
+  | SSH_AGENT_SUCCES -> 6
+  | SSH_AGENT_reserved7 -> 7
+  | SSH_AGENT_reserved8 -> 8
+  | SSH_AGENT_reserved9 -> 9
+  | SSH_AGENT_reserved10 -> 10
+  | SSH_AGENTC_REQUEST_IDENTITIES -> 11
+  | SSH_AGENT_IDENTITIES_ANSWER -> 12
+  | SSH_AGENTC_SIGN_REQUEST -> 13
+  | SSH_AGENT_SIGN_RESPONSE -> 14
+  | SSH_AGENTC_ADD_IDENTITY -> 17
+  | SSH_AGENTC_REMOVE_IDENTITY -> 18
+  | SSH_AGENTC_REMOVE_ALL_IDENTITIES -> 19
+  | SSH_AGENTC_ADD_SMARTCARD_KEY -> 20
+  | SSH_AGENTC_REMOVE_SMARTCARD_KEY -> 21
+  | SSH_AGENTC_LOCK -> 22
+  | SSH_AGENTC_UNLOCK -> 23
+  | SSH_AGENT_reserved24 -> 24
+  | SSH_AGENTC_ADD_ID_CONSTRAINED -> 25
+  | SSH_AGENTC_ADD_SMARTCARD_KEY_CONSTRAINED -> 26
+  | SSH_AGENTC_EXTENSION -> 27
+  | SSH_AGENT_EXTENSION_FAILURE -> 28
+
+let int_to_ssh_agent = function
+  |  1 -> Some SSH_AGENT_reserved1
+  |  2 -> Some SSH_AGENT_reserved2
+  |  3 -> Some SSH_AGENT_reserved3
+  |  4 -> Some SSH_AGENT_reserved4
+  |  5 -> Some SSH_AGENT_FAILURE
+  |  6 -> Some SSH_AGENT_SUCCES
+  |  7 -> Some SSH_AGENT_reserved7
+  |  8 -> Some SSH_AGENT_reserved8
+  |  9 -> Some SSH_AGENT_reserved9
+  | 10 -> Some SSH_AGENT_reserved10
+  | 11 -> Some SSH_AGENTC_REQUEST_IDENTITIES
+  | 12 -> Some SSH_AGENT_IDENTITIES_ANSWER
+  | 13 -> Some SSH_AGENTC_SIGN_REQUEST
+  | 14 -> Some SSH_AGENT_SIGN_RESPONSE
+  | 17 -> Some SSH_AGENTC_ADD_IDENTITY
+  | 18 -> Some SSH_AGENTC_REMOVE_IDENTITY
+  | 19 -> Some SSH_AGENTC_REMOVE_ALL_IDENTITIES
+  | 20 -> Some SSH_AGENTC_ADD_SMARTCARD_KEY
+  | 21 -> Some SSH_AGENTC_REMOVE_SMARTCARD_KEY
+  | 22 -> Some SSH_AGENTC_LOCK
+  | 23 -> Some SSH_AGENTC_UNLOCK
+  | 24 -> Some SSH_AGENT_reserved24
+  | 25 -> Some SSH_AGENTC_ADD_ID_CONSTRAINED
+  | 26 -> Some SSH_AGENTC_ADD_SMARTCARD_KEY_CONSTRAINED
+  | 27 -> Some SSH_AGENTC_EXTENSION
+  | 28 -> Some SSH_AGENT_EXTENSION_FAILURE
+  | _ -> None
+
+let ssh_agent_to_string = function
+  | SSH_AGENT_reserved1 -> "SSH_AGENT_reserved1"
+  | SSH_AGENT_reserved2 -> "SSH_AGENT_reserved2"
+  | SSH_AGENT_reserved3 -> "SSH_AGENT_reserved3"
+  | SSH_AGENT_reserved4 -> "SSH_AGENT_reserved4"
+  | SSH_AGENT_FAILURE -> "SSH_AGENT_FAILURE"
+  | SSH_AGENT_SUCCES -> "SSH_AGENT_SUCCES"
+  | SSH_AGENT_reserved7 -> "SSH_AGENT_reserved7"
+  | SSH_AGENT_reserved8 -> "SSH_AGENT_reserved8"
+  | SSH_AGENT_reserved9 -> "SSH_AGENT_reserved9"
+  | SSH_AGENT_reserved10 -> "SSH_AGENT_reserved10"
+  | SSH_AGENTC_REQUEST_IDENTITIES -> "SSH_AGENTC_REQUEST_IDENTITIES"
+  | SSH_AGENT_IDENTITIES_ANSWER -> "SSH_AGENT_IDENTITIES_ANSWER"
+  | SSH_AGENTC_SIGN_REQUEST -> "SSH_AGENTC_SIGN_REQUEST"
+  | SSH_AGENT_SIGN_RESPONSE -> "SSH_AGENT_SIGN_RESPONSE"
+  | SSH_AGENTC_ADD_IDENTITY -> "SSH_AGENTC_ADD_IDENTITY"
+  | SSH_AGENTC_REMOVE_IDENTITY -> "SSH_AGENTC_REMOVE_IDENTITY"
+  | SSH_AGENTC_REMOVE_ALL_IDENTITIES -> "SSH_AGENTC_REMOVE_ALL_IDENTITIES"
+  | SSH_AGENTC_ADD_SMARTCARD_KEY -> "SSH_AGENTC_ADD_SMARTCARD_KEY"
+  | SSH_AGENTC_REMOVE_SMARTCARD_KEY -> "SSH_AGENTC_REMOVE_SMARTCARD_KEY"
+  | SSH_AGENTC_LOCK -> "SSH_AGENTC_LOCK"
+  | SSH_AGENTC_UNLOCK -> "SSH_AGENTC_UNLOCK"
+  | SSH_AGENT_reserved24 -> "SSH_AGENT_reserved24"
+  | SSH_AGENTC_ADD_ID_CONSTRAINED -> "SSH_AGENTC_ADD_ID_CONSTRAINED"
+  | SSH_AGENTC_ADD_SMARTCARD_KEY_CONSTRAINED -> "SSH_AGENTC_ADD_SMARTCARD_KEY_CONSTRAINED"
+  | SSH_AGENTC_EXTENSION -> "SSH_AGENTC_EXTENSION"
+  | SSH_AGENT_EXTENSION_FAILURE -> "SSH_AGENT_EXTENSION_FAILURE"
+(* [@@uint8_t]] *)
+
+(* [%%cenum *)
 type sign_flag =
-  | SSH_AGENT_RSA_SHA2_256 [@id 2]
-  | SSH_AGENT_RSA_SHA2_512 [@id 4]
-[@@uint8_t]]
+  | SSH_AGENT_RSA_SHA2_256
+  | SSH_AGENT_RSA_SHA2_512
+
+let sign_flag_to_int = function
+  | SSH_AGENT_RSA_SHA2_256 -> 2
+  | SSH_AGENT_RSA_SHA2_512 -> 4
+(* [@@uint8_t]] *)
 
 let mask_to_sign_flags mask =
   let mask_test mask flag =
@@ -41,8 +130,17 @@ let mask_to_sign_flags mask =
     else [] in
   List.concat (List.map (mask_test mask) [SSH_AGENT_RSA_SHA2_256; SSH_AGENT_RSA_SHA2_512])
 
-[%%cenum
+(* [%%cenum *)
 type ssh_cert_type =
-  | Ssh_cert_type_user [@id 1]
-  | Ssh_cert_type_host [@id 2]
-[@@uint32_t]]
+  | Ssh_cert_type_user
+  | Ssh_cert_type_host
+
+let ssh_cert_type_to_int = function
+  | Ssh_cert_type_user -> 1l
+  | Ssh_cert_type_host -> 2l
+
+let int_to_ssh_cert_type = function
+  | 1l -> Some Ssh_cert_type_user
+  | 2l -> Some Ssh_cert_type_host
+  | _ -> None
+(* [@@uint32_t]] *)

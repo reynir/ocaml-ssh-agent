@@ -1,6 +1,4 @@
 (library
  (name ssh_agent)
  (public_name ssh-agent)
- (preprocess
-  (pps ppx_cstruct))
- (libraries cstruct angstrom mirage-crypto mirage-crypto-pk mirage-crypto-ec faraday))
+ (libraries angstrom mirage-crypto mirage-crypto-pk mirage-crypto-ec faraday))
